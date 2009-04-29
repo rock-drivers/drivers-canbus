@@ -9,7 +9,7 @@ using namespace can;
 
 Driver::Driver()
     : IODriver(sizeof(can_msg))
-    , m_timeout(100) {}
+    , m_timeout(DEFAULT_TIMEOUT) {}
 
 #define SEND_IOCTL(cmd) {\
     int ret = ioctl(fd, cmd); \
