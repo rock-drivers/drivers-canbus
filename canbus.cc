@@ -40,6 +40,11 @@ bool Driver::reset(int fd)
     return true;
 }
 
+void Driver::setTimeout(uint32_t timeout)
+{ m_timeout = timeout; }
+uint32_t Driver::getTimeout() const
+{ return m_timeout; }
+
 bool Driver::open(std::string const& path)
 {
     if (isValid())
