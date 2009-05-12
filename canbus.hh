@@ -1,6 +1,5 @@
 #ifndef CANBUS_HH
 #define CANBUS_HH
-#include "hico_api.h"
 #include "canmessage.hh"
 #include "iodrivers_base.hh"
 #include <string>

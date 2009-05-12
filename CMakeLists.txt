@@ -30,7 +30,7 @@ TARGET_LINK_LIBRARIES(canbus_test canbus)
 INSTALL(TARGETS canbus
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib)
-INSTALL(FILES canbus.hh hico_api.h canmessage.hh DESTINATION include)
+INSTALL(FILES canbus.hh canmessage.hh DESTINATION include)
 
 CONFIGURE_FILE(Doxyfile.in Doxyfile @ONLY)
 ADD_CUSTOM_TARGET(doc doxygen Doxyfile)
