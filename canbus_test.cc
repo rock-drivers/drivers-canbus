@@ -18,6 +18,8 @@ int main(int argc, char**argv)
     can::Driver driver;
     if (!driver.open(argv[1]))
         return 1;
+    if (!driver.reset())
+        return 1;
 
     size_t count = 1000;
     if (argc == 3)
@@ -35,5 +37,6 @@ int main(int argc, char**argv)
     {
         cerr << hex << it->first << " " << dec << it->second << endl;
     }
+    return 0;
 }
 
