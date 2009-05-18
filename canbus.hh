@@ -80,6 +80,10 @@ namespace can
         /** Returns the number of messages queued in the board's RX queue
          */
         int getPendingMessagesCount() const;
+
+        /** Removes all pending messages from the RX queue
+         */
+        void clear();
     };
 }
 

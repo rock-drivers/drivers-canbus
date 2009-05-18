@@ -107,3 +107,13 @@ int Driver::getPendingMessagesCount() const
     return count;
 }
 
+void Driver::clear()
+{
+    int count = getPendingMessagesCount();
+    for (int i = 0; i < count; ++i)
+    {
+        can_msg msg;
+        readPacket(reinterpret_cast<uint8_t*>(&msg), sizeof(can_msg), m_read_timeout);
+    }
+}
+
