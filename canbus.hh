@@ -16,7 +16,8 @@ namespace can
         template<typename T>
         bool sendSetupIOCTL(std::string const& name, int cmd, T arg);
 
-        uint32_t m_timeout;
+        uint32_t m_read_timeout;
+        uint32_t m_write_timeout;
 
         int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
 
@@ -46,23 +47,31 @@ namespace can
         static bool reset(int fd);
 
         /** Sets the timeout, in milliseconds, for which we are allowed to wait
-         * for packets in read() or for write access in write()
+         * for write access is write()
          */
-        void     setTimeout(uint32_t timeout);
+        void     setWriteTimeout(uint32_t timeout);
         /** Returns the timeout, in milliseconds, for which we are allowed to wait
          * for packets in read() or for write access in write()
          */
-        uint32_t getTimeout() const;
+        uint32_t getWriteTimeout() const;
+        /** Sets the timeout, in milliseconds, for which we are allowed to wait
+         * for packets in read()
+         */
+        void     setReadTimeout(uint32_t timeout);
+        /** Returns the timeout, in milliseconds, for which we are allowed to wait
+         * for packets in read() or for write access in write()
+         */
+        uint32_t getReadTimeout() const;
 
         /** Reads the next message. It is guaranteed to not block longer than the
-         * timeout provided in setTimeout().
+         * timeout provided by setReadTimeout().
          *
          * The default timeout value is given by DEFAULT_TIMEOUT
          */
         Message read();
 
         /** Writes a message. It is guaranteed to not block longer than the
-         * timeout provided in setTimeout().
+         * timeout provided in setWriteTimeout().
          *
          * The default timeout value is given by DEFAULT_TIMEOUT
          */

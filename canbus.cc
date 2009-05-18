@@ -10,7 +10,8 @@ using namespace can;
 
 Driver::Driver()
     : IODriver(sizeof(can_msg))
-    , m_timeout(DEFAULT_TIMEOUT) {}
+    , m_read_timeout(DEFAULT_TIMEOUT)
+    , m_write_timeout(DEFAULT_TIMEOUT) {}
 
 #define SEND_IOCTL(cmd) {\
     int ret = ioctl(fd, cmd); \
@@ -41,10 +42,14 @@ bool Driver::reset(int fd)
     return true;
 }
 
-void Driver::setTimeout(uint32_t timeout)
-{ m_timeout = timeout; }
-uint32_t Driver::getTimeout() const
-{ return m_timeout; }
+void Driver::setReadTimeout(uint32_t timeout)
+{ m_read_timeout = timeout; }
+uint32_t Driver::getReadTimeout() const
+{ return m_read_timeout; }
+void Driver::setWriteTimeout(uint32_t timeout)
+{ m_write_timeout = timeout; }
+uint32_t Driver::getWriteTimeout() const
+{ return m_write_timeout; }
 
 bool Driver::open(std::string const& path)
 {
@@ -66,7 +71,7 @@ bool Driver::open(std::string const& path)
 Message Driver::read()
 {
     can_msg msg;
-    readPacket(reinterpret_cast<uint8_t*>(&msg), sizeof(can_msg), m_timeout);
+    readPacket(reinterpret_cast<uint8_t*>(&msg), sizeof(can_msg), m_read_timeout);
 
     Message result;
     result.timestamp = DFKI::Time::now();
@@ -83,7 +88,7 @@ void Driver::write(Message const& msg)
     out.id = msg.can_id;
     memcpy(out.data, msg.data, 8);
     out.dlc   = msg.size;
-    writePacket(reinterpret_cast<uint8_t*>(&out), sizeof(can_msg), m_timeout);
+    writePacket(reinterpret_cast<uint8_t*>(&out), sizeof(can_msg), m_write_timeout);
 }
 
 int Driver::extractPacket(uint8_t const* buffer, size_t buffer_size) const
