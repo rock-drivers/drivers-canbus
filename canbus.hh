@@ -76,6 +76,10 @@ namespace can
          * The default timeout value is given by DEFAULT_TIMEOUT
          */
         void write(Message const& msg);
+
+        /** Returns the number of messages queued in the board's RX queue
+         */
+        int getPendingMessagesCount() const;
     };
 }
 

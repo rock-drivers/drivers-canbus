@@ -100,3 +100,10 @@ int Driver::extractPacket(uint8_t const* buffer, size_t buffer_size) const
         return -buffer_size;
 }
 
+int Driver::getPendingMessagesCount() const
+{
+    int count = 0;
+    ioctl(getFileDescriptor(), IOC_MSGS_IN_RXBUF, &count);
+    return count;
+}
+
