@@ -74,10 +74,11 @@ Message Driver::read()
     readPacket(reinterpret_cast<uint8_t*>(&msg), sizeof(can_msg), m_read_timeout);
 
     Message result;
-    result.timestamp = DFKI::Time::now();
-    result.can_id = msg.id;
+    result.timestamp     = DFKI::Time::now();
+    result.can_timestamp = DFKI::Time(msg.ts / 1000000, msg.ts % 1000000);
+    result.can_id        = msg.id;
     memcpy(result.data, msg.data, 8);
-    result.size   = msg.dlc;
+    result.size          = msg.dlc;
     return result;
 }
 

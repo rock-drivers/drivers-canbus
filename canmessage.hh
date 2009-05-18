@@ -7,6 +7,7 @@ namespace can
     struct Message
     {
         DFKI::Time timestamp;
+        DFKI::Time can_timestamp;
 
         uint32_t can_id;
         uint8_t  data[8];
