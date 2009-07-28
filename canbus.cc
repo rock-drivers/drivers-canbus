@@ -56,7 +56,7 @@ bool Driver::open(std::string const& path)
     if (isValid())
         close();
 
-    int fd = ::open(path.c_str(), O_RDWR);
+    int fd = ::open(path.c_str(), O_RDWR | O_NONBLOCK);
     if (fd == INVALID_FD)
         return false;
 
