@@ -1,0 +1,23 @@
+#! /bin/sh
+
+if test -z "$1" || test -z "$2"; then
+    echo "usage: canbus_monitor <device> <file> [--display]"
+    echo "  logs data on can bus device <device> in <file>, and"
+    echo "  optionally displays it on stdout"
+    echo "  the data is logged in text form"
+    exit 1
+fi
+
+DEVICE=$1
+OUTFILE=$2
+DISPLAY=$3
+
+canbus_tool -o $DEVICE -x
+sleep 1
+date > $OUTFILE
+if test "$DISPLAY" = "--display"; then
+    canbus_tool -o $DEVICE -m passive -b 1000k -M | tee -a $OUTFILE
+else
+    canbus_tool -o $DEVICE -m passive -b 1000k -M >> $OUTFILE
+fi
+
