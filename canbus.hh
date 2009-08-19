@@ -81,6 +81,13 @@ namespace can
          */
         int getPendingMessagesCount() const;
 
+      /** Checks if bus reports error, this may indicate a disconnected cable
+       *  this method will only report an error after an message was written
+       *  to the bus
+       */
+      bool checkBusOk();
+      
+
         /** Removes all pending messages from the RX queue
          */
         void clear();

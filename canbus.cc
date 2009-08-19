@@ -107,6 +107,20 @@ int Driver::getPendingMessagesCount() const
     return count;
 }
 
+bool Driver::checkBusOk() 
+{
+  uint32_t status;
+  int fd = getFileDescriptor();
+  SEND_IOCTL_2(IOC_GET_CAN_STATUS, &status);
+
+  if((status & CS_ERROR_PASSIVE) || 
+     (status & CS_ERROR_BUS_OFF)){
+    return false;
+  }
+
+  return true;
+}
+
 void Driver::clear()
 {
     int count = getPendingMessagesCount();
