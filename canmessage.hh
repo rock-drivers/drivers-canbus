@@ -2,6 +2,11 @@
 #define CANBUS_MESSAGE_HH
 
 #include <dfki/base_types.h>
+
+#ifndef __orogen
+#include <stdint.h>
+#endif
+
 namespace can
 {
     struct Message
