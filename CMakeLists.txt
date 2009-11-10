@@ -32,7 +32,8 @@ add_executable(canbus_tool monitor/hcantool)
 INSTALL(TARGETS canbus canbus_tool
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib)
-install(FILES monitor/canbus_monitor DESTINATION bin)
+install(FILES monitor/canbus_monitor DESTINATION bin
+    PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
 INSTALL(FILES canbus.hh canmessage.hh DESTINATION include)
 
 CONFIGURE_FILE(Doxyfile.in Doxyfile @ONLY)
