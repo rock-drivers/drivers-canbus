@@ -1,4 +1,13 @@
 <package>
-    <depend package="modules/dfki_toolkit" />
+    <description brief="driver for Emtrion CAN bus cards">
+        This library offers a driver for the emtrion CAN bus cards
+    </description>
+    <author>Sylvain Joyeux/sylvain.joyeux@dfki.de</author>
+    <copyright>
+        DFKI/robotik@dfki.de
+    </copyright>
+    <license>LGPL v2 or later</license>
+
+    <depend package="base" />
     <depend package="drivers/iodrivers_base" />
 </package>
