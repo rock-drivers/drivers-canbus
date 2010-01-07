@@ -1,7 +1,7 @@
 #ifndef CANBUS_MESSAGE_HH
 #define CANBUS_MESSAGE_HH
 
-#include <base/base_types.h>
+#include <base/time.h>
 
 #ifndef __orogen
 #include <stdint.h>
@@ -11,8 +11,8 @@ namespace can
 {
     struct Message
     {
-        base::Time timestamp;
-        base::Time can_timestamp;
+        base::Time time;
+        base::Time can_time;
 
         uint32_t can_id;
         uint8_t  data[8];
