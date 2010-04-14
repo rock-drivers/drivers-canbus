@@ -21,7 +21,7 @@ pkg_check_modules(IO REQUIRED "iodrivers_base")
 INCLUDE_DIRECTORIES(${IO_INCLUDE_DIRS})
 LINK_DIRECTORIES(${IO_LIBRARY_DIRS})
 
-ADD_LIBRARY(canbus SHARED canbus.cc)
+ADD_LIBRARY(canbus SHARED canbus.cc canbus-hico.cc canbus-socket.cc)
 TARGET_LINK_LIBRARIES(canbus ${base_TYPES_LIBRARIES} ${IO_LIBRARIES})
 
 ADD_EXECUTABLE(canbus_test canbus_test.cc)

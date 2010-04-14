@@ -19,10 +19,10 @@ int main(int argc, char**argv)
     }
 
     std::map<int, int> statistics;
-    can::Driver driver;
-    if (!driver.open(argv[1]))
+    can::Driver * driver = can::openCanDevice(argv[1]);
+    if (!driver)
         return 1;
-    if (!driver.reset())
+    if (!driver->reset())
         return 1;
 
     int64_t count = -1;
@@ -35,8 +35,8 @@ int main(int argc, char**argv)
             count = boost::lexical_cast<size_t>(argv[2]);
     }
 
-    int id   = 0;
-    int mask = 0;
+    unsigned int id   = 0;
+    unsigned int mask = 0;
     if (argc >= 4)
     {
         id = strtol(argv[3], NULL, 0);
@@ -50,7 +50,7 @@ int main(int argc, char**argv)
     int i = 0;
     while(count == -1 || i < count)
     {
-        can::Message msg = driver.read();
+        can::Message msg = driver->read();
         if ((msg.can_id & mask) != id)
             continue;
 
