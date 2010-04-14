@@ -3,6 +3,7 @@ SET(PROJECT_VERSION 1.1)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 INCLUDE(FindPkgConfig)
+INCLUDE(CheckIncludeFiles)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 MACRO(CMAKE_USE_FULL_RPATH install_rpath)
@@ -21,7 +22,14 @@ pkg_check_modules(IO REQUIRED "iodrivers_base")
 INCLUDE_DIRECTORIES(${IO_INCLUDE_DIRS})
 LINK_DIRECTORIES(${IO_LIBRARY_DIRS})
 
-ADD_LIBRARY(canbus SHARED canbus.cc canbus-hico.cc canbus-socket.cc)
+CHECK_INCLUDE_FILES (linux/can.h HAVE_CAN_H)
+
+if(HAVE_CAN_H)
+  SET(canSocketSource canbus-socket.cc)
+  add_definitions(-DHAVE_CAN_H)
+endif(HAVE_CAN_H)
+
+ADD_LIBRARY(canbus SHARED canbus.cc canbus-hico.cc ${canSocketSource})
 TARGET_LINK_LIBRARIES(canbus ${base_TYPES_LIBRARIES} ${IO_LIBRARIES})
 
 ADD_EXECUTABLE(canbus_test canbus_test.cc)
