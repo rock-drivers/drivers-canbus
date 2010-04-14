@@ -2,7 +2,7 @@
 #define CANBUS_HH
 #include "canmessage.hh"
 #include <string>
-
+#define CANBUS_VERSION 101
 
 namespace can
 {
