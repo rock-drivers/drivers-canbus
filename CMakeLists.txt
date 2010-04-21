@@ -22,12 +22,15 @@ pkg_check_modules(IO REQUIRED "iodrivers_base")
 INCLUDE_DIRECTORIES(${IO_INCLUDE_DIRS})
 LINK_DIRECTORIES(${IO_LIBRARY_DIRS})
 
-CHECK_INCLUDE_FILES (linux/can.h HAVE_CAN_H)
+check_include_files("sys/socket.h;linux/can.h" HAVE_CAN_H)
 
 if(HAVE_CAN_H)
+  message(STATUS "kernel support socket-can, building support for it")
   SET(canSocketSource canbus-socket.cc)
   add_definitions(-DHAVE_CAN_H)
-endif(HAVE_CAN_H)
+else()
+  message(STATUS "kernel does not support socket-can")
+endif()
 
 ADD_LIBRARY(canbus SHARED canbus.cc canbus-hico.cc ${canSocketSource})
 TARGET_LINK_LIBRARIES(canbus ${base_TYPES_LIBRARIES} ${IO_LIBRARIES})
