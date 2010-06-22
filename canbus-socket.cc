@@ -383,11 +383,11 @@ int DriverSocket::getPendingMessagesCount()
     return rx_queue.size();
 }
 
-bool DriverSocket::checkBusOk() 
+bool DriverSocket::checkBusOk()
 {
     Timeout t(0);
     while(checkInput(t)) {}
-    return m_error;
+    return !m_error;
 }
 
 void DriverSocket::clear()
