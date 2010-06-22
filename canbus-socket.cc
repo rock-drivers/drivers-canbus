@@ -35,16 +35,18 @@ bool DriverSocket::reset(int fd)
 	return false;
     }
 
-    can_err_mask_t err_mask = ( CAN_ERR_TX_TIMEOUT | 
+    //CAN_ERR_CTRL is not requested because those are mostly long-term
+    //bus quality flags
+    can_err_mask_t err_mask = ( CAN_ERR_TX_TIMEOUT |
 				CAN_ERR_LOSTARB |
-				CAN_ERR_CRTL |
+				//CAN_ERR_CRTL |
 				CAN_ERR_PROT |
 				CAN_ERR_TRX |
 				CAN_ERR_ACK |
 				CAN_ERR_BUSOFF |
 				CAN_ERR_BUSERROR |
 				CAN_ERR_RESTARTED
-	); //for now, take all errors
+	);
     //the peak can adapter seems to not report many errors, even when there
     //is something wrong with the bus, and there are no acks..
 
