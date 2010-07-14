@@ -6,6 +6,7 @@ includedir=${prefix}/include
 Name: canbus
 Description: Driver to access the CAN bus
 Version: @PROJECT_VERSION@
+Requires: base-types
 Libs: -L${libdir} -lcanbus
 Cflags: -I${includedir}
 
