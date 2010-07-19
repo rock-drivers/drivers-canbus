@@ -64,6 +64,10 @@ bool DriverHico::open(std::string const& path)
     if (!reset(fd))
         return false;
 
+    /* Leave this in this order. For some reason it is more accurate */
+    timestampBase = base::Time::now();
+    SEND_IOCTL(IOC_RESET_TIMESTAMP);
+
     setFileDescriptor(guard.release());
     return true;
 }
@@ -75,7 +79,8 @@ Message DriverHico::read()
 
     Message result;
     result.time     = base::Time::now();
-    result.can_time = base::Time(msg.ts / 1000000, msg.ts % 1000000);
+    result.can_time = base::Time(msg.ts / 1000000, msg.ts % 1000000) +
+      timestampBase;
     result.can_id        = msg.id;
     memcpy(result.data, msg.data, 8);
     result.size          = msg.dlc;

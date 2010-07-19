@@ -20,6 +20,8 @@ namespace can
         uint32_t m_read_timeout;
         uint32_t m_write_timeout;
 
+        base::Time timestampBase;
+
         int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
 
     public:
