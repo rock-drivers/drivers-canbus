@@ -307,7 +307,7 @@ bool DriverSocket::checkInput(Timeout timeout)
     /* do something with the received CAN frame */
     Message result;
     if (haveTimestamp)
-	result.time     = base::Time(tv.tv_sec,tv.tv_usec);
+	result.time     = base::Time::fromSeconds(tv.tv_sec,tv.tv_usec);
     else
 	throw "timestamp missing";
 //	result.time     = base::Time::now();

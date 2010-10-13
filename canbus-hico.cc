@@ -79,7 +79,7 @@ Message DriverHico::read()
 
     Message result;
     result.time     = base::Time::now();
-    result.can_time = base::Time(msg.ts / 1000000, msg.ts % 1000000) +
+    result.can_time = base::Time::fromMicroseconds(msg.ts) +
       timestampBase;
     result.can_id        = msg.id;
     memcpy(result.data, msg.data, 8);
