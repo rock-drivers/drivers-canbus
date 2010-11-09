@@ -24,6 +24,14 @@ namespace can
          */
         virtual bool open(std::string const& path) = 0;
 
+        /** Resets the CAN board. This must be called before
+	 *  any calls to reset() on any of the interfaces of the same
+	 *  board
+         *
+         * @return false on error, true on success
+         */
+        virtual bool reset_board() = 0;
+
         /** Resets the CAN interface
          *
          * @return false on error, true on success

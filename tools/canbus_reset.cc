@@ -10,5 +10,5 @@ int main(int argc, char** argv)
         return 1;
     }
     std::auto_ptr<can::Driver> driver(can::openCanDevice(argv[1]));
-    driver.reset();
+    driver->reset_board();
 }

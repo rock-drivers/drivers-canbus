@@ -38,6 +38,20 @@ namespace can
          */
         bool open(std::string const& path);
 
+        /** Resets the CAN board. This must be called before
+	 *  any calls to reset() on any of the interfaces of the same
+	 *  board
+         *
+         * @return false on error, true on success
+         */
+        bool reset_board();
+        /** Resets the CAN board. This must be called before
+	 *  any calls to reset() on any of the interfaces of the same
+	 *  board
+         *
+         * @return false on error, true on success
+         */
+        static bool reset_board(int fd);
         /** Resets the CAN interface
          *
          * @return false on error, true on success
