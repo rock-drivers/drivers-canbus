@@ -11,7 +11,7 @@ namespace can
      */
     class Driver
     {
-	public:
+    public:
 	virtual ~Driver();
         /** The default timeout value in milliseconds
          *

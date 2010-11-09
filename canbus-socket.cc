@@ -98,9 +98,6 @@ bool DriverSocket::open(std::string const& path)
     if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
 	    return false;
 
-    if (!reset(fd))
-      return false;
-
     m_fd = guard.release();
     return true;
 }
