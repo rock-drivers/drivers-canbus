@@ -1,6 +1,5 @@
 <package>
-    <description brief="driver for Emtrion CAN bus cards">
-        This library offers a driver for the emtrion CAN bus cards
+    <description brief="unified CAN driver for CAN-socket based hardware as well as Emtrion CAN bus cards">
     </description>
     <author>Sylvain Joyeux/sylvain.joyeux@dfki.de</author>
     <copyright>
