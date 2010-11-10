@@ -22,6 +22,8 @@ pkg_check_modules(IO REQUIRED "iodrivers_base")
 INCLUDE_DIRECTORIES(${IO_INCLUDE_DIRS})
 LINK_DIRECTORIES(${IO_LIBRARY_DIRS})
 
+include_directories(BEFORE ${CMAKE_SOURCE_DIR})
+
 check_include_files("sys/socket.h;linux/can.h" HAVE_CAN_H)
 
 if(HAVE_CAN_H)
