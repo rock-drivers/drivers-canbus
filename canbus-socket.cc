@@ -16,7 +16,7 @@
 
 #include <iodrivers_base.hh>
 
-using namespace can;
+using namespace canbus;
 
 DriverSocket::DriverSocket()
     : m_read_timeout(DEFAULT_TIMEOUT)

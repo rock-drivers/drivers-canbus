@@ -6,7 +6,7 @@
 #include <string.h>
 #include <fcntl.h>
 
-using namespace can;
+using namespace canbus;
 
 DriverHico::DriverHico()
     : IODriver(sizeof(can_msg))

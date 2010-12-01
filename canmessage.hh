@@ -2,12 +2,9 @@
 #define CANBUS_MESSAGE_HH
 
 #include <base/time.h>
-
-#ifndef __orogen
 #include <stdint.h>
-#endif
 
-namespace can
+namespace canbus
 {
     struct Message
     {

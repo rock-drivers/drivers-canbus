@@ -8,7 +8,7 @@
 
 class Timeout;
 
-namespace can
+namespace canbus
 {
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.

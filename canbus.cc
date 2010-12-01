@@ -7,13 +7,13 @@
 
 #include <stdio.h>
 
-using namespace can;
+using namespace canbus;
 
 Driver::~Driver() 
 {
 }
 
-Driver *can::openCanDevice(std::string const& path)
+Driver *canbus::openCanDevice(std::string const& path)
 {
     Driver *d;
     d = new DriverHico();

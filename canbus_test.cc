@@ -19,7 +19,7 @@ int main(int argc, char**argv)
     }
 
     std::map<int, int> statistics;
-    can::Driver * driver = can::openCanDevice(argv[1]);
+    canbus::Driver * driver = canbus::openCanDevice(argv[1]);
     if (!driver)
         return 1;
     if (!driver->reset())
@@ -50,7 +50,7 @@ int main(int argc, char**argv)
     int i = 0;
     while(count == -1 || i < count)
     {
-        can::Message msg = driver->read();
+        canbus::Message msg = driver->read();
         if ((msg.can_id & mask) != id)
             continue;
 
