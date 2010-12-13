@@ -82,7 +82,11 @@ bool DriverHico::open(std::string const& path)
     if (fd == INVALID_FD)
         return false;
 
-    setFileDescriptor(fd);
+    file_guard guard(fd);
+    if (!reset(fd))
+        return false;
+
+    setFileDescriptor(guard.release());
     return true;
 }
 
