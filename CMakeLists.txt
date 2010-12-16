@@ -22,6 +22,8 @@ pkg_check_modules(IO REQUIRED "iodrivers_base")
 INCLUDE_DIRECTORIES(${IO_INCLUDE_DIRS})
 LINK_DIRECTORIES(${IO_LIBRARY_DIRS})
 
+include_directories(BEFORE ${CMAKE_SOURCE_DIR})
+
 check_include_files("sys/socket.h;linux/can.h" HAVE_CAN_H)
 
 if(HAVE_CAN_H)
@@ -38,12 +40,14 @@ TARGET_LINK_LIBRARIES(canbus ${base_TYPES_LIBRARIES} ${IO_LIBRARIES})
 ADD_EXECUTABLE(canbus_test canbus_test.cc)
 TARGET_LINK_LIBRARIES(canbus_test canbus)
 
-add_executable(canbus_tool monitor/hcantool)
+add_executable(hico_tool    tools/hcantool.c)
+add_executable(canbus_reset tools/canbus_reset.cc)
+target_link_libraries(canbus_reset canbus)
 
-INSTALL(TARGETS canbus canbus_tool
+INSTALL(TARGETS canbus hico_tool canbus_reset
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib)
-install(FILES monitor/canbus_monitor DESTINATION bin
+install(FILES tools/hico_monitor DESTINATION bin
     PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
 INSTALL(FILES canbus.hh canmessage.hh DESTINATION include)
 

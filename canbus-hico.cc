@@ -30,11 +30,33 @@ DriverHico::DriverHico()
     } \
 }
 
-bool DriverHico::reset()
-{ return DriverHico::reset(m_fd); }
-bool DriverHico::reset(int fd)
+bool DriverHico::reset_board()
+{
+    if (!DriverHico::reset_board(m_fd))
+        return false;
+
+    /* Leave this in this order. For some reason it is more accurate */
+    timestampBase = base::Time::now();
+    int fd = m_fd; // for SEND_IOCTL
+    SEND_IOCTL(IOC_RESET_TIMESTAMP);
+    return true;
+}
+bool DriverHico::reset_board(int fd)
 {
     SEND_IOCTL(IOC_RESET_BOARD);
+    return true;
+}
+
+bool DriverHico::reset()
+{
+    if (!DriverHico::reset(m_fd))
+        return false;
+
+    timestampBase = base::Time::fromSeconds(0);
+    return true;
+}
+bool DriverHico::reset(int fd)
+{
     int bitrate = static_cast<int>(BITRATE_1000k);
     SEND_IOCTL_2(IOC_SET_BITRATE, &bitrate);
     SEND_IOCTL(IOC_STOP);
@@ -63,10 +85,6 @@ bool DriverHico::open(std::string const& path)
     file_guard guard(fd);
     if (!reset(fd))
         return false;
-
-    /* Leave this in this order. For some reason it is more accurate */
-    timestampBase = base::Time::now();
-    SEND_IOCTL(IOC_RESET_TIMESTAMP);
 
     setFileDescriptor(guard.release());
     return true;

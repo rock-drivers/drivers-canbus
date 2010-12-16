@@ -240,7 +240,7 @@ static void printErrorFrame(struct can_frame const & frame)
 bool DriverSocket::checkInput(Timeout timeout)
 {
     struct can_frame frame;
-    struct timeval tv;
+    struct timeval tv = {0};
     bool haveTimestamp = false;
 
     while(true) {
@@ -266,7 +266,7 @@ bool DriverSocket::checkInput(Timeout timeout)
 		 cmsg = CMSG_NXTHDR(&msgh,cmsg)) {
 		if (cmsg->cmsg_level == SOL_SOCKET
 		    && cmsg->cmsg_type == SO_TIMESTAMP) {
-		    tv = *(struct timeval*)CMSG_DATA(cmsg);
+		    tv = *(struct timeval*)(void*)CMSG_DATA(cmsg);
 		    haveTimestamp = true;
 		    break;
 		}
