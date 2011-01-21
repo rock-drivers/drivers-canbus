@@ -14,16 +14,16 @@ DriverVsCan::DriverVsCan()
     , m_write_timeout(DEFAULT_TIMEOUT) {}
 
 #define SEND_IOCTL(cmd) {\
-    int ret = ioctl(fd, cmd); \
-    if (ret == -1) \
+    VSCAN_STATUS ret = ioctl(handle, cmd); \
+    if (ret != VSCAN_ERR_OK) \
     { \
         perror(#cmd); \
         return false; \
     } \
 }
 #define SEND_IOCTL_2(cmd, arg) {\
-    int ret = ioctl(fd, cmd, arg); \
-    if (ret == -1) \
+    VSCAN_STATUS ret = VSCAN_Ioctl(handle, cmd, arg); \
+    if (ret != VSCAN_ERR_OK) \
     { \
         perror(#cmd); \
         return false; \
@@ -32,35 +32,26 @@ DriverVsCan::DriverVsCan()
 
 bool DriverVsCan::reset_board()
 {
-    if (!DriverVsCan::reset_board(m_fd))
-        return false;
-
-    /* Leave this in this order. For some reason it is more accurate */
-    timestampBase = base::Time::now();
-    int fd = m_fd; // for SEND_IOCTL
-    SEND_IOCTL(IOC_RESET_TIMESTAMP);
+   
     return true;
 }
-bool DriverVsCan::reset_board(int fd)
+bool DriverVsCan::reset_board(int handle)
 {
-    SEND_IOCTL(IOC_RESET_BOARD);
     return true;
 }
 
 bool DriverVsCan::reset()
 {
-    if (!DriverVsCan::reset(m_fd))
+    VSCAN_STATUS retVal = VSCAN_Ioctl(handle, VSCAN_IOCTL_SET_TIMESTAMP, VSCAN_TIMESTAMP_ON);
+    if (retVal != VSCAN_ERR_OK)
         return false;
 
     timestampBase = base::Time::fromSeconds(0);
     return true;
 }
-bool DriverVsCan::reset(int fd)
+bool DriverVsCan::reset(int handle)
 {
-    int bitrate = static_cast<int>(BITRATE_1000k);
-    SEND_IOCTL_2(IOC_SET_BITRATE, &bitrate);
-    SEND_IOCTL(IOC_STOP);
-    SEND_IOCTL(IOC_START);
+    SEND_IOCTL_2(VSCAN_IOCTL_SET_SPEED, VSCAN_SPEED_1M);
     return true;
 }
 
@@ -78,12 +69,12 @@ bool DriverVsCan::open(std::string const& path)
     if (isValid())
         close();
 
-    int fd = ::open(path.c_str(), O_RDWR | O_NONBLOCK);
-    if (fd == INVALID_FD)
+    int handle = ::open(path.c_str(), O_RDWR | O_NONBLOCK);
+    if (handle == INVALID_handle)
         return false;
 
-    file_guard guard(fd);
-    if (!reset(fd))
+    file_guard guard(handle);
+    if (!reset(handle))
         return false;
 
     setFileDescriptor(guard.release());
@@ -93,6 +84,7 @@ bool DriverVsCan::open(std::string const& path)
 Message DriverVsCan::read()
 {
     can_msg msg;
+    
     readPacket(reinterpret_cast<uint8_t*>(&msg), sizeof(can_msg), m_read_timeout);
 
     Message result;
@@ -133,11 +125,10 @@ int DriverVsCan::getPendingMessagesCount()
 bool DriverVsCan::checkBusOk() 
 {
   uint32_t status;
-  int fd = getFileDescriptor();
-  SEND_IOCTL_2(IOC_GET_CAN_STATUS, &status);
+  SEND_IOCTL_2(VSCAN_IOCTL_GET_FLAGS, &status);
 
-  if((status & CS_ERROR_PASSIVE) || 
-     (status & CS_ERROR_BUS_OFF)){
+  if((status & VSCAN_IOCTL_FLAG_ERR_PASSIVE) || 
+     (status & VSCAN_IOCTL_FLAG_BUS_ERROR)){
     return false;
   }
 
