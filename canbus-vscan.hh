@@ -1,28 +1,28 @@
 #ifndef CANBUS_VSCAN_HH
 #define CANBUS_VSCAN_HH
 #include "canmessage.hh"
-#include "iodrivers_base.hh"
 #include "canbus.hh"
 #include <string>
-
+#include <deque>
+#include <iodrivers_base.hh>
 
 namespace canbus
 {
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
-    class DriverVsCan : public IODriver, public Driver
+    class DriverVsCan : public Driver
     {
-        bool sendSetupIOCTL(std::string const& name, int cmd);
-        template<typename T>
-        bool sendSetupIOCTL(std::string const& name, int cmd, T arg);
-
+        int handle;
         uint32_t m_read_timeout;
         uint32_t m_write_timeout;
 
+        std::deque<Message> rx_queue;
+        bool m_error;
+
         base::Time timestampBase;
 
-        int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
+        bool checkForMessages(Timeout &timeout);
 
     public:
         /** The default timeout value in milliseconds

@@ -1,5 +1,7 @@
-#include "canbus-hico.hh"
+#include "canbus-vscan.hh"
 #include "vs_can_api.h"
+
+#include <iodrivers_base.hh>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -9,8 +11,7 @@
 using namespace canbus;
 
 DriverVsCan::DriverVsCan()
-    : IODriver(sizeof(can_msg))
-    , m_read_timeout(DEFAULT_TIMEOUT)
+    : m_read_timeout(DEFAULT_TIMEOUT)
     , m_write_timeout(DEFAULT_TIMEOUT) {}
 
 #define SEND_IOCTL(cmd) {\
@@ -32,7 +33,9 @@ DriverVsCan::DriverVsCan()
 
 bool DriverVsCan::reset_board()
 {
-   
+    /* Leave this in this order. For some reason it is more accurate */
+    timestampBase = base::Time::now();
+    
     return true;
 }
 bool DriverVsCan::reset_board(int handle)
@@ -49,11 +52,6 @@ bool DriverVsCan::reset()
     timestampBase = base::Time::fromSeconds(0);
     return true;
 }
-bool DriverVsCan::reset(int handle)
-{
-    SEND_IOCTL_2(VSCAN_IOCTL_SET_SPEED, VSCAN_SPEED_1M);
-    return true;
-}
 
 void DriverVsCan::setReadTimeout(uint32_t timeout)
 { m_read_timeout = timeout; }
@@ -66,60 +64,82 @@ uint32_t DriverVsCan::getWriteTimeout() const
 
 bool DriverVsCan::open(std::string const& path)
 {
-    if (isValid())
-        close();
-
-    int handle = ::open(path.c_str(), O_RDWR | O_NONBLOCK);
-    if (handle == INVALID_handle)
+    if((handle = VSCAN_Open(VSCAN_FIRST_FOUND,  VSCAN_MODE_NORMAL)) == -1)
         return false;
+    
+    SEND_IOCTL_2(VSCAN_IOCTL_SET_SPEED, VSCAN_SPEED_1M);
 
-    file_guard guard(handle);
-    if (!reset(handle))
-        return false;
-
-    setFileDescriptor(guard.release());
     return true;
 }
 
+bool DriverVsCan::checkForMessages(Timeout& timeout)
+{
+#define BUFFER_SIZE 100
+    VSCAN_MSG buffer[BUFFER_SIZE];
+    DWORD read_cnt;
+    VSCAN_STATUS ret;
+
+    int rx_cnt = 0;
+    
+    while(rx_cnt < 1)
+    {
+        if(timeout.elapsed())
+            return false;
+
+        if((ret = VSCAN_Read(handle, buffer, BUFFER_SIZE, &read_cnt) != VSCAN_ERR_OK))
+            throw unix_error("read(): error in reading can messages");
+
+        for(unsigned int i = 0; i < read_cnt; i++)
+        {        
+            VSCAN_MSG *msg = buffer + i;
+            Message result;
+            result.time     = base::Time::now();
+            unsigned int time = msg->Timestamp;
+            result.can_time = base::Time::fromMicroseconds(time * 1000) +
+            timestampBase;
+            result.can_id        = msg->Id;
+            memcpy(result.data, msg->Data, 8);
+            result.size          = msg->Size;
+            rx_queue.push_back(result);
+        }
+        
+        rx_cnt += read_cnt;        
+    }
+    
+    return true;
+}
+
+
 Message DriverVsCan::read()
 {
-    can_msg msg;
-    
-    readPacket(reinterpret_cast<uint8_t*>(&msg), sizeof(can_msg), m_read_timeout);
+    Timeout timeout(m_read_timeout);
 
-    Message result;
-    result.time     = base::Time::now();
-    result.can_time = base::Time::fromMicroseconds(msg.ts) +
-      timestampBase;
-    result.can_id        = msg.id;
-    memcpy(result.data, msg.data, 8);
-    result.size          = msg.dlc;
-    return result;
+    if(!checkForMessages(timeout))
+        throw timeout_error(timeout_error::PACKET, "read(): timeout");
+    
+    Message msg = rx_queue.front();
+    rx_queue.pop_front();
+    
+    return msg;
 }
 
 void DriverVsCan::write(Message const& msg)
 {
-    can_msg out;
-    memset(&out, 0, sizeof(can_msg));
-    out.id = msg.can_id;
-    memcpy(out.data, msg.data, 8);
-    out.dlc   = msg.size;
-    writePacket(reinterpret_cast<uint8_t*>(&out), sizeof(can_msg), m_write_timeout);
-}
-
-int DriverVsCan::extractPacket(uint8_t const* buffer, size_t buffer_size) const
-{
-    if (buffer_size == sizeof(can_msg))
-        return sizeof(can_msg);
-    else
-        return -buffer_size;
+    VSCAN_MSG out;
+    DWORD out_cnt;
+    memset(&out, 0, sizeof(VSCAN_MSG));
+    out.Id = msg.can_id;
+    memcpy(out.Data, msg.data, 8);
+    out.Size   = msg.size;
+    if(VSCAN_Write(handle, &out, 1, &out_cnt) != VSCAN_ERR_OK)
+        throw unix_error("write(): error during write");
 }
 
 int DriverVsCan::getPendingMessagesCount()
 {
-    int count = 0;
-    ioctl(getFileDescriptor(), IOC_MSGS_IN_RXBUF, &count);
-    return count;
+    Timeout t(0);
+    checkForMessages(t);
+    return rx_queue.size();
 }
 
 bool DriverVsCan::checkBusOk() 
@@ -137,28 +157,22 @@ bool DriverVsCan::checkBusOk()
 
 void DriverVsCan::clear()
 {
-    int count = getPendingMessagesCount();
-    for (int i = 0; i < count; ++i)
-    {
-        can_msg msg;
-        readPacket(reinterpret_cast<uint8_t*>(&msg), sizeof(can_msg), m_read_timeout);
-    }
+    rx_queue.clear();
 }
 
-int DriverVsCan::getFileDescriptor() const 
+int DriverVsCan::getFileDescriptor() const
 {
-    return IODriver::getFileDescriptor();
+    return IODriver::INVALID_FD;
 }
 
-/** True if a valid file descriptor is assigned to this object */
 bool DriverVsCan::isValid() const
 {
-    return IODriver::isValid();
+    return m_error;
 }
 
 /** Closes the file descriptor */
 void DriverVsCan::close()
 {
-    IODriver::close();
+    VSCAN_STATUS status = VSCAN_Close(handle);
 }
 
