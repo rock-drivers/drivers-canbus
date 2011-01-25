@@ -9,4 +9,5 @@
 
     <depend package="base/types" />
     <depend package="drivers/iodrivers_base" />
+    <tags>stable</tags>
 </package>
