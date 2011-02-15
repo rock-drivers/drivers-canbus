@@ -4,6 +4,7 @@
 #include "iodrivers_base.hh"
 #include "canbus.hh"
 #include <string>
+#include "hicocan.h"
 
 
 namespace canbus
@@ -120,6 +121,7 @@ namespace canbus
 
 	/** Closes the file descriptor */
 	void close();
+ 
   private:
     bool setBaudRate(int fd, int Rate);
 	

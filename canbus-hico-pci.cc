@@ -1,6 +1,4 @@
 #include "canbus-hico-pci.hh"
-#include "hicocan.h"
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
@@ -11,7 +9,7 @@
 using namespace canbus;
 
 DriverHicoPCI::DriverHicoPCI()
-    : IODriver(sizeof(can_msg))
+    : IODriver(sizeof(canMsg))
     , m_read_timeout(DEFAULT_TIMEOUT)
     , m_write_timeout(DEFAULT_TIMEOUT) {}
 
@@ -35,15 +33,10 @@ DriverHicoPCI::DriverHicoPCI()
 
 void DriverHicoPCI::~DriverHicoPCI()
 { // done
- int ret =-1;
- int fd=getFileDescriptor(); 
-
- ret= ioctl(fd,IOC_STOP);
   
-
-  if (ret!=-1)
-     std::cout<<"NODE stopped"<<std::endl;
-
+  // stop the node
+  SEND_IOCTL(IOC_STOP);
+  
   // close the node
   close(fd);
   
@@ -58,14 +51,12 @@ bool DriverHicoPCI::reset_board()
     timestampBase = base::Time::now();
     int fd = m_fd; // for SEND_IOCTL
     
-    /// this function is neccessary ?
-    //SEND_IOCTL(IOC_RESET_TIMESTAMP);
     return true;
 }
 bool DriverHicoPCI::reset_board(int fd)
 {//done
-	ioctl(fd,IOC_RESET_BOARD);
-   // SEND_IOCTL(IOC_RESET_BOARD);
+	SEND_IOCTL(IOC_RESET_BOARD);
+  
     return true;
 }
 
@@ -79,28 +70,10 @@ bool DriverHicoPCI::reset()
 }
 bool DriverHicoPCI::reset(int fd)
 {//done
-    int bitrate = static_cast<int>(BITRATE_1000k);
-    //SEND_IOCTL_2(IOC_SET_BITRATE, &bitrate);
+     
+    SEND_IOCTL(IOC_STOP); 
+    SEND_IOCTL(IOC_START);
     
-    int ret= ioctl(fd,IOC_STOP);
-    
-    if (ret!=-1)
-     std::cout<<"NODE stopped"<<std::endl;
-    
-    ret= ioctl(fd,IOC_START);
-    
-    std::cout<<ret<<std::endl;
-    
-    if(ret == -1)
-    {
-     printf("Problem to enable the NODES\n");
-     return false;
-    }
-    else
-     printf(" NODES ENABLED\n");
-    
-    //SEND_IOCTL(IOC_STOP);
-    //SEND_IOCTL(IOC_START);
     return true;
 }
 
@@ -110,20 +83,8 @@ bool DriverHicoPCI::setBaudRate(int fd, int Rate)
    
    parameters.baud = Rate;
    	
-   int ret=ioctl(fd, IOC_SET_BAUD, &parameters);
-   
-   if(ret==-1)
-   {
-     printf("ERROR while setting Baudrate\n");
-     return false;
-   }
-   else
-   {
-     printf("Baud Rate set\n");
-     return true;
-   }
-	
-	
+   SEND_IOCTL_2(IOC_SET_BAUD, &parameters);
+   	
 }
 
 void DriverHicoPCI::setReadTimeout(uint32_t timeout)
@@ -155,6 +116,7 @@ bool DriverHicoPCI::open(std::string const& path)
     fcntl(fd, F_SETFL, ( flags | O_NONBLOCK));      
         
     file_guard guard(fd);
+    
     if (!reset(fd))
         return false;
 
@@ -168,6 +130,7 @@ Message DriverHicoPCI::read()
     readPacket(reinterpret_cast<uint8_t*>(&msg), sizeof(canMsg), m_read_timeout);
 
     Message result;
+    
     result.time     = base::Time::now();
     result.can_time = base::Time::fromMicroseconds(msg.ts.us) +
       timestampBase;
@@ -204,11 +167,10 @@ int DriverHicoPCI::getPendingMessagesCount()
     canState curstat;
     int fd = getFileDescriptor();
     
-    ioctl(fd,IOC_GET_CAN_STATE,&curstat);
+    SEND_IOCTL_2(IOC_GET_CAN_STATE, &curstat);
     
-    count = curstat.recBuf;
+    count = curstat.recBuf; //maybe .recQ
   
-  //  ioctl(getFileDescriptor(), IOC_MSGS_IN_RXBUF, &count);
     return count;
 }
 
@@ -219,12 +181,10 @@ bool DriverHicoPCI::checkBusOk()
   
   int fd = getFileDescriptor();
   
-  ioctl(fd,IOC_GET_CAN_STATE,&curstat);
+  SEND_IOCTL_2(IOC_GET_CAN_STATE, &curstat);
   
   status = curstat.state;
   
-  //SEND_IOCTL_2(IOC_GET_CAN_STATUS, &status);
-
   if((status & CSC_ERR_PSV) || 
      (status & C_BUSOFF)){
     return false;
