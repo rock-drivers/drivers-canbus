@@ -34,7 +34,7 @@ else()
   message(STATUS "kernel does not support socket-can")
 endif()
 
-ADD_LIBRARY(canbus SHARED canbus.cc canbus-hico.cc ${canSocketSource})
+ADD_LIBRARY(canbus SHARED canbus.cc canbus-hico.cc canbus-hico-pci.cc ${canSocketSource})
 TARGET_LINK_LIBRARIES(canbus ${base_TYPES_LIBRARIES} ${IO_LIBRARIES})
 
 ADD_EXECUTABLE(canbus_test canbus_test.cc)

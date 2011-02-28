@@ -8,8 +8,21 @@
 #ifndef _HICOCAN_H
 #define _HICOCAN_H
 
-#if !defined (__KERNEL__)
-#include <stdint.h>
+//#if !defined (__KERNEL__)
+//#include <stdint.h>
+//#endif
+
+#ifdef __QNX__
+ #define IOC_MAGIC _DCMD_MISC
+ #include <ioctl.h>
+ #include <devctl.h>
+ #include <stdint.h>
+#else /* Linux */
+// #define IOC_MAGIC 'E'
+ #ifndef __KERNEL__
+  #include <sys/ioctl.h>
+  #include <stdint.h>
+ #endif
 #endif
 
 /* definitions for frame format    */

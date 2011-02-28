@@ -1,4 +1,6 @@
 #include "canbus-hico-pci.hh"
+//#include "hico_api.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
@@ -28,19 +30,18 @@ DriverHicoPCI::DriverHicoPCI()
         perror(#cmd); \
         return false; \
     } \
-      
 }
-
-void DriverHicoPCI::~DriverHicoPCI()
+/*
+DriverHicoPCI::~DriverHicoPCI()
 { // done
-  
+  int fd = getFileDescriptor();
   // stop the node
   SEND_IOCTL(IOC_STOP);
   
   // close the node
-  close(fd);
+  ::close();
   
-}
+}*/
 
 bool DriverHicoPCI::reset_board()
 {//done ?
@@ -49,7 +50,7 @@ bool DriverHicoPCI::reset_board()
 
     /* Leave this in this order. For some reason it is more accurate */
     timestampBase = base::Time::now();
-    int fd = m_fd; // for SEND_IOCTL
+   // int fd = m_fd; // for SEND_IOCTL
     
     return true;
 }
@@ -84,7 +85,7 @@ bool DriverHicoPCI::setBaudRate(int fd, int Rate)
    parameters.baud = Rate;
    	
    SEND_IOCTL_2(IOC_SET_BAUD, &parameters);
-   	
+      	
 }
 
 void DriverHicoPCI::setReadTimeout(uint32_t timeout)
@@ -185,7 +186,7 @@ bool DriverHicoPCI::checkBusOk()
   
   status = curstat.state;
   
-  if((status & CSC_ERR_PSV) || 
+  if((status & C_ERR_PSV) || 
      (status & C_BUSOFF)){
     return false;
   }

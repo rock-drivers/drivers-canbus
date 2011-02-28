@@ -1,5 +1,6 @@
 #ifndef CANBUS_HICO_PCI_HH
 #define CANBUS_HICO_PCI_HH
+
 #include "canmessage.hh"
 #include "iodrivers_base.hh"
 #include "canbus.hh"
@@ -33,7 +34,7 @@ namespace canbus
         static const int DEFAULT_TIMEOUT = 100;
 
         DriverHicoPCI();
-        ~DriverHicoPCI();
+       //~DriverHicoPCI();
 
         /** Opens the given device and resets the CAN interface. It returns
          * true if the initialization was successful and false otherwise
