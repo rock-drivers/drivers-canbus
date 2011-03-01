@@ -28,7 +28,7 @@ Driver *canbus::openCanDevice(std::string const& path, driverType dType)
 			return d;
     		}
     		else
-      			fprintf(stderr,"no hico-can card found... trying to reach PCI card\n");
+      			fprintf(stderr,"no hico-can card found... could not open HicoCan device\n");
     		delete d;                
 		break;
 
@@ -39,7 +39,7 @@ Driver *canbus::openCanDevice(std::string const& path, driverType dType)
 			return d;
     		}
     		else
-      			fprintf(stderr,"no hico-can PCI card found... trying to reach socket can driver\n");
+      			fprintf(stderr,"no hico-can PCI card found... could not open HicoCan PCI device\n");
     
   		delete d;
 		break;
@@ -51,7 +51,7 @@ Driver *canbus::openCanDevice(std::string const& path, driverType dType)
 			return d;
     		}
     		else
-        		fprintf(stderr,"no socket can driver found--> your PC does not have a working CANbus Interface!\n");
+        		fprintf(stderr,"no socket can driver found... could not open socket CAN device!\n");
     		delete d;
 		break;		
 		//#endif
