@@ -1,10 +1,11 @@
 #ifndef CANBUS_HICO_PCI_HH
 #define CANBUS_HICO_PCI_HH
 
+#include <string>
+
 #include "canmessage.hh"
 #include "iodrivers_base.hh"
 #include "canbus.hh"
-#include <string>
 #include "hicocan.h"
 
 

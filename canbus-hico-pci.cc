@@ -1,5 +1,5 @@
 #include "canbus-hico-pci.hh"
-//#include "hico_api.h"
+
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -85,6 +85,8 @@ bool DriverHicoPCI::setBaudRate(int fd, int Rate)
    parameters.baud = Rate;
    	
    SEND_IOCTL_2(IOC_SET_BAUD, &parameters);
+  
+   return true;
       	
 }
 
@@ -103,10 +105,14 @@ bool DriverHicoPCI::open(std::string const& path)
         close();
 
     int fd = ::open(path.c_str(), O_RDWR);
+   
     if (fd == INVALID_FD)
         return false;
+  
     // set the baudrate
-    int ret = setBaudRate(fd, BAUDRATE);    
+    bool ret = false;
+    
+    ret = setBaudRate(fd, BAUDRATE);    
         
     if(!ret)
         return false;  
@@ -145,11 +151,11 @@ void DriverHicoPCI::write(Message const& msg)
 {//done
     canMsg out;
     memset(&out, 0, sizeof(canMsg));
-    out.id = msg.can_id;
-    out.rtr = 0;
-    out.ff = HiCOCAN_FORMAT_BASIC;
+    out.id  = msg.can_id;
+    out.rtr = HiCOCAN_NORMAL_FRAME;
+    out.ff  = HiCOCAN_FORMAT_BASIC;
     memcpy(out.data, msg.data, 8);
-    out.dlc   = msg.size;
+    out.dlc = msg.size;
   
     writePacket(reinterpret_cast<uint8_t*>(&out), sizeof(canMsg), m_write_timeout);
 }
@@ -177,7 +183,7 @@ int DriverHicoPCI::getPendingMessagesCount()
 
 bool DriverHicoPCI::checkBusOk() 
 {//done
-  uint32_t status;
+  uint8_t status;
   canState curstat;
   
   int fd = getFileDescriptor();
