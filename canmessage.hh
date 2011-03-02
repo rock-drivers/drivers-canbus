@@ -6,6 +6,14 @@
 
 namespace canbus
 {
+    enum DRIVER_TYPE
+    {
+	SOCKET,
+	HICO,
+	HICO_PCI,
+	VS_CAN
+    };
+    
     struct Message
     {
         base::Time time;

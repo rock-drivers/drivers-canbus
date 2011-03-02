@@ -4,8 +4,6 @@
 #include <string>
 #define CANBUS_VERSION 101
 
-enum driverType{SOCKET,HICO,HICO_PCI,VS_CAN};
-
 namespace canbus
 {
     /** This class allows to (i) setup a CAN interface and (ii) having read and
@@ -98,7 +96,7 @@ namespace canbus
 	virtual void close() = 0;
     };
 
-    Driver *openCanDevice(std::string const& path, driverType dType = SOCKET);
+    Driver *openCanDevice(std::string const& path, DRIVER_TYPE dType = SOCKET);
 }
 
 #endif

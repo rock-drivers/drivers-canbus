@@ -15,7 +15,7 @@ Driver::~Driver()
 {
 }
 
-Driver *canbus::openCanDevice(std::string const& path, driverType dType)
+Driver *canbus::openCanDevice(std::string const& path, DRIVER_TYPE dType)
 {
    
   Driver *d;
