@@ -97,6 +97,7 @@ namespace canbus
     };
 
     Driver *openCanDevice(std::string const& path, DRIVER_TYPE dType = SOCKET);
+    Driver *openCanDevice(std::string const& path, std::string const& type);
 }
 
 #endif

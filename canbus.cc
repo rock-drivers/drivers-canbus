@@ -8,6 +8,8 @@
 #endif
 
 #include <stdio.h>
+#include <algorithm>
+#include <string>
 
 using namespace canbus;
 
@@ -58,4 +60,28 @@ Driver *canbus::openCanDevice(std::string const& path, DRIVER_TYPE dType)
   default : return NULL; 
   }
   return NULL;
+}
+
+Driver *canbus::openCanDevice(std::string const& path, std::string const& type_upper)
+{
+    std::string type = type_upper;
+    
+    std::transform(type_upper.begin(), type_upper.end(), type.begin(), ::tolower);
+    
+    if(type == std::string("hico"))
+    {
+	return openCanDevice(path, HICO);
+    }
+
+    if(type == std::string("hico_pci"))
+    {
+	return openCanDevice(path, HICO_PCI);
+    }
+
+    if(type == std::string("socket"))
+    {
+	return openCanDevice(path, SOCKET);
+    }
+
+    return NULL;
 }
