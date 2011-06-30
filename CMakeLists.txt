@@ -43,6 +43,8 @@ TARGET_LINK_LIBRARIES(canbus_test canbus)
 add_executable(hico_tool    tools/hcantool.c)
 add_executable(canbus_reset tools/canbus_reset.cc)
 target_link_libraries(canbus_reset canbus)
+add_executable(send_tool    tools/send_tool.cc)
+target_link_libraries(send_tool canbus)
 
 INSTALL(TARGETS canbus hico_tool canbus_reset
     RUNTIME DESTINATION bin
