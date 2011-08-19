@@ -30,9 +30,9 @@ DriverHico::DriverHico()
     } \
 }
 
-bool DriverHico::reset_board()
+bool DriverHico::resetBoard()
 {
-    if (!DriverHico::reset_board(m_fd))
+    if (!DriverHico::resetBoard(m_fd))
         return false;
 
     /* Leave this in this order. For some reason it is more accurate */
@@ -41,7 +41,7 @@ bool DriverHico::reset_board()
     SEND_IOCTL(IOC_RESET_TIMESTAMP);
     return true;
 }
-bool DriverHico::reset_board(int fd)
+bool DriverHico::resetBoard(int fd)
 {
     SEND_IOCTL(IOC_RESET_BOARD);
     return true;

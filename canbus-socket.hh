@@ -44,7 +44,7 @@ namespace canbus
          *
          * @return false on error, true on success
          */
-        bool reset_board() { return true; }
+        bool resetBoard() { return true; }
         /** Resets the CAN interface
          *
          * @return false on error, true on success

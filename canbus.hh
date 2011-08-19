@@ -30,7 +30,12 @@ namespace canbus
          *
          * @return false on error, true on success
          */
-        virtual bool reset_board() = 0;
+        virtual bool resetBoard() = 0;
+
+        /** @deprecated
+         * use resetBoard() instead
+         */
+        bool reset_board() { return resetBoard(); }
 
         /** Resets the CAN interface
          *

@@ -43,9 +43,9 @@ DriverHicoPCI::~DriverHicoPCI()
   
 }*/
 
-bool DriverHicoPCI::reset_board()
+bool DriverHicoPCI::resetBoard()
 {//done ?
-    if (!DriverHicoPCI::reset_board(m_fd))
+    if (!DriverHicoPCI::resetBoard(m_fd))
         return false;
 
     /* Leave this in this order. For some reason it is more accurate */
@@ -54,7 +54,7 @@ bool DriverHicoPCI::reset_board()
     
     return true;
 }
-bool DriverHicoPCI::reset_board(int fd)
+bool DriverHicoPCI::resetBoard(int fd)
 {//done
 	SEND_IOCTL(IOC_RESET_BOARD);
   
