@@ -4,7 +4,7 @@
 #include <string>
 
 #include "canmessage.hh"
-#include "iodrivers_base.hh"
+#include <iodrivers_base/Driver.hpp>
 #include "canbus.hh"
 #include "hicocan.h"
 
@@ -14,7 +14,7 @@ namespace canbus
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
-    class DriverHicoPCI : public IODriver, public Driver
+    class DriverHicoPCI : public iodrivers_base::Driver, public Driver
     {
         bool sendSetupIOCTL(std::string const& name, int cmd);
         template<typename T>

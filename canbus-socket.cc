@@ -17,6 +17,9 @@
 #include <iodrivers_base.hh>
 
 using namespace canbus;
+using iodrivers_base::UnixError;
+using iodrivers_base::TimeoutError;
+using iodrivers_base::Timeout;
 
 DriverSocket::DriverSocket()
     : m_read_timeout(DEFAULT_TIMEOUT)
@@ -77,7 +80,7 @@ bool DriverSocket::open(std::string const& path)
     if (fd == -1)
       return false;
 
-    file_guard guard(fd);
+    iodrivers_base::FileGuard guard(fd);
 
     long fd_flags = fcntl(fd, F_GETFL);
     if (fd_flags == -1)
@@ -289,7 +292,7 @@ bool DriverSocket::checkInput(Timeout timeout)
 	pfd.events = POLLIN;
 	res = poll(&pfd,1,timeout.timeLeft());
 	if (res == -1)
-            throw unix_error("read(): error in poll()");
+            throw UnixError("read(): error in poll()");
         else if (res == 0)
 	    return false;
     }
@@ -358,21 +361,21 @@ void DriverSocket::write(Message const& msg)
     while(true) {
 	int c = send(m_fd,reinterpret_cast<char*>(&frame), sizeof(can_frame), 0);
         if (c == -1 && errno != EAGAIN && errno != ENOBUFS)
-            throw unix_error("write(): error during write");
+            throw UnixError("write(): error during write");
 	if (c > 0)
 	    return;
 	
         if (timeout.elapsed())
-            throw timeout_error(timeout_error::PACKET, "write(): timeout");
+            throw TimeoutError(TimeoutError::PACKET, "write(): timeout");
 
 	struct pollfd pfd;
 	pfd.fd = m_fd;
 	pfd.events = POLLOUT;
 	int res = poll(&pfd,1,timeout.timeLeft());
 	if (res == -1)
-            throw unix_error("writePacket(): error in poll()");
+            throw UnixError("writePacket(): error in poll()");
         else if (res == 0)
-            throw timeout_error(timeout_error::PACKET, "write(): timeout");
+            throw TimeoutError(TimeoutError::PACKET, "write(): timeout");
     }
 }
 

@@ -11,7 +11,7 @@
 using namespace canbus;
 
 DriverHicoPCI::DriverHicoPCI()
-    : IODriver(sizeof(canMsg))
+    : iodrivers_base::Driver(sizeof(canMsg))
     , m_read_timeout(DEFAULT_TIMEOUT)
     , m_write_timeout(DEFAULT_TIMEOUT) {}
 
@@ -122,7 +122,7 @@ bool DriverHicoPCI::open(std::string const& path)
         
     fcntl(fd, F_SETFL, ( flags | O_NONBLOCK));      
         
-    file_guard guard(fd);
+    iodrivers_base::FileGuard guard(fd);
     
     if (!reset(fd))
         return false;
@@ -212,18 +212,18 @@ void DriverHicoPCI::clear()
 
 int DriverHicoPCI::getFileDescriptor() const 
 {// not touched
-    return IODriver::getFileDescriptor();
+    return iodrivers_base::Driver::getFileDescriptor();
 }
 
 /** True if a valid file descriptor is assigned to this object */
 bool DriverHicoPCI::isValid() const
 {// not touched
-    return IODriver::isValid();
+    return iodrivers_base::Driver::isValid();
 }
 
 /** Closes the file descriptor */
 void DriverHicoPCI::close()
 {// not touched
-    IODriver::close();
+    iodrivers_base::Driver::close();
 }
 

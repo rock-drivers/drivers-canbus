@@ -9,7 +9,7 @@
 using namespace canbus;
 
 DriverHico::DriverHico()
-    : IODriver(sizeof(can_msg))
+    : iodrivers_base::Driver(sizeof(can_msg))
     , m_read_timeout(DEFAULT_TIMEOUT)
     , m_write_timeout(DEFAULT_TIMEOUT) {}
 
@@ -82,7 +82,7 @@ bool DriverHico::open(std::string const& path)
     if (fd == INVALID_FD)
         return false;
 
-    file_guard guard(fd);
+    iodrivers_base::FileGuard guard(fd);
     if (!reset(fd))
         return false;
 
@@ -156,18 +156,18 @@ void DriverHico::clear()
 
 int DriverHico::getFileDescriptor() const 
 {
-    return IODriver::getFileDescriptor();
+    return iodrivers_base::Driver::getFileDescriptor();
 }
 
 /** True if a valid file descriptor is assigned to this object */
 bool DriverHico::isValid() const
 {
-    return IODriver::isValid();
+    return iodrivers_base::Driver::isValid();
 }
 
 /** Closes the file descriptor */
 void DriverHico::close()
 {
-    IODriver::close();
+    iodrivers_base::Driver::close();
 }
 
