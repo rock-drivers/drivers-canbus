@@ -4,9 +4,8 @@
 #include <string>
 #include <deque>
 #include "canbus.hh"
+#include <iodrivers_base.hh>
 
-
-class Timeout;
 
 namespace canbus
 {
