@@ -73,6 +73,7 @@ uint32_t DriverSocket::getWriteTimeout() const
 
 bool DriverSocket::open(std::string const& path)
 {
+    this->path = path;
     if (isValid())
         close();
 
@@ -108,9 +109,9 @@ bool DriverSocket::open(std::string const& path)
     return true;
 }
 
-static void printErrorFrame(struct can_frame const & frame) 
+static void printErrorFrame(struct can_frame const & frame, std::string const& path) 
 {
-    printf("read: CAN error frame\n");
+    printf("read(%s): CAN error frame\n",path.c_str());
     if (frame.can_id & CAN_ERR_TX_TIMEOUT)
 	printf("\tTX timeout\n");
     if (frame.can_id & CAN_ERR_LOSTARB)
@@ -299,7 +300,7 @@ bool DriverSocket::checkInput(Timeout timeout)
 
     if (frame.can_id & CAN_ERR_FLAG) {
 	m_error = true;
-	printErrorFrame(frame);
+	printErrorFrame(frame, path);
 	return true;
     }
     if (frame.can_id & CAN_RTR_FLAG) {

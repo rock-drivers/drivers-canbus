@@ -24,6 +24,7 @@ namespace canbus
 
 	std::deque<Message> rx_queue;
 	bool m_error;
+	std::string path;
     public:
         /** The default timeout value in milliseconds
          *
