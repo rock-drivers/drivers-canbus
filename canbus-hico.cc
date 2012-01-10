@@ -32,12 +32,12 @@ DriverHico::DriverHico()
 
 bool DriverHico::resetBoard()
 {
-    if (!DriverHico::resetBoard(m_fd))
+    if (!DriverHico::resetBoard(getFileDescriptor()))
         return false;
 
     /* Leave this in this order. For some reason it is more accurate */
     timestampBase = base::Time::now();
-    int fd = m_fd; // for SEND_IOCTL
+    int fd = getFileDescriptor(); // for SEND_IOCTL
     SEND_IOCTL(IOC_RESET_TIMESTAMP);
     return true;
 }
@@ -49,7 +49,7 @@ bool DriverHico::resetBoard(int fd)
 
 bool DriverHico::reset()
 {
-    if (!DriverHico::reset(m_fd))
+    if (!DriverHico::reset(getFileDescriptor()))
         return false;
 
     timestampBase = base::Time::fromSeconds(0);

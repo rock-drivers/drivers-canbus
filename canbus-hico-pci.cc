@@ -45,7 +45,7 @@ DriverHicoPCI::~DriverHicoPCI()
 
 bool DriverHicoPCI::resetBoard()
 {//done ?
-    if (!DriverHicoPCI::resetBoard(m_fd))
+    if (!DriverHicoPCI::resetBoard(getFileDescriptor()))
         return false;
 
     /* Leave this in this order. For some reason it is more accurate */
@@ -63,7 +63,7 @@ bool DriverHicoPCI::resetBoard(int fd)
 
 bool DriverHicoPCI::reset()
 { //done
-    if (!DriverHicoPCI::reset(m_fd))
+    if (!DriverHicoPCI::reset(getFileDescriptor()))
         return false;
 
     timestampBase = base::Time::fromSeconds(0);
