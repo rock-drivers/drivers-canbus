@@ -113,6 +113,7 @@ void DriverHico::write(Message const& msg)
     memcpy(out.data, msg.data, 8);
     out.dlc   = msg.size;
     writePacket(reinterpret_cast<uint8_t*>(&out), sizeof(can_msg), m_write_timeout);
+    //printf("drivers/canbus wrote: %d %d %d %d %d %d %d %d\n", out.data[0], out.data[1],out.data[2],out.data[3],out.data[4],out.data[5],out.data[6],out.data[7]);
 }
 
 int DriverHico::extractPacket(uint8_t const* buffer, size_t buffer_size) const
