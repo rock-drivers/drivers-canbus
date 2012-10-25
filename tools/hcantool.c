@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 	switch (opt) {
 
 	case 'h':
-	    printf(helppi);
+	    printf("%s", helppi);
 	    break;
 
 
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 	case 'o':		// open the CAN device node
 	    canFd = open(optarg, O_RDWR);
 	    if (canFd == -1)
-		err(1, optarg);
+		err(1, "%s", optarg);
 
 	    /* Get CAN type (HS/FT/EMPTY) */
 	    ret = ioctl(canFd,IOC_GET_CAN_TYPE,&can_type);
@@ -161,13 +161,13 @@ int main(int argc, char *argv[])
 	case 'z':
 	    if(sscanf(optarg,"%d",&repeat)!=1){
 		errno=EINVAL;
-		err(1,optarg);
+		err(1,"%s",optarg);
 	    }
 	    break;
 	case 'p':
 	    if(sscanf(optarg,"%d",&write_pause)!=1){
 		errno=EINVAL;
-		err(1,optarg);
+		err(1,"%s",optarg);
 	    }
 	    break;
 
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 		} else if (ret == 3 && c == ':') {	/* '<id>:<filename>' open a file for reading */
 		    dataStream = fopen(buf, "r");
 		    if (dataStream==NULL)
-			err(1, buf);
+			err(1,"%s",buf);
 		} else if (ret == 3 && c == 'R') {	/* '<id>![1:8]' rtr for given number of bytes */
 			int dlc;
 			dlc=atol(buf);
