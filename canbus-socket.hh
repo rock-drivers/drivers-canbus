@@ -12,7 +12,7 @@ namespace canbus
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
-    class DriverSocket : public Driver
+    class DriverSocket : public Driver, public canbus::Interface
     {
     private:
         uint32_t m_read_timeout;
@@ -123,6 +123,19 @@ namespace canbus
 
 	/** Closes the file descriptor */
 	void close();
+        
+        virtual bool readCanMsg(canbus::Message& msg){
+            if(getPendingMessagesCount() > 0){
+                msg = read();
+                return true;
+            }
+            return false;
+        }
+
+        virtual bool sendCanMsg(const canbus::Message &msg){
+            write(msg);
+            return true;
+        }
     };
 }
 
