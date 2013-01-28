@@ -101,6 +101,14 @@ namespace canbus
 	virtual void close() = 0;
     };
 
+    class Interface{
+        public:
+        Interface();
+        virtual ~Interface();
+        virtual bool readCanMsg(canbus::Message& msg) = 0;
+        virtual bool sendCanMsg(const canbus::Message &msg) = 0;
+    };
+
     Driver *openCanDevice(std::string const& path, DRIVER_TYPE dType = SOCKET);
     Driver *openCanDevice(std::string const& path, std::string const& type);
 }
