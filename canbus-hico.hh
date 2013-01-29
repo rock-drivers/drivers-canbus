@@ -11,7 +11,7 @@ namespace canbus
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
-    class DriverHico : public iodrivers_base::Driver, public Driver, public canbus::Interface
+    class DriverHico : public iodrivers_base::Driver, public Driver
     {
         bool sendSetupIOCTL(std::string const& name, int cmd);
         template<typename T>
@@ -120,18 +120,6 @@ namespace canbus
 	/** Closes the file descriptor */
 	void close();
     
-        virtual bool readCanMsg(canbus::Message& msg){
-            if(getPendingMessagesCount() > 0){
-                msg = read();
-                return true;
-            }
-            return false;
-        }
-
-        virtual bool sendCanMsg(const canbus::Message &msg){
-            write(msg);
-            return true;
-        }
     };
 }
 

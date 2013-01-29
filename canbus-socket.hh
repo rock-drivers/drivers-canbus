@@ -4,7 +4,8 @@
 #include <string>
 #include <deque>
 #include "canbus.hh"
-#include <iodrivers_base.hh>
+#include <iodrivers_base/Driver.hpp>
+#include <iodrivers_base/Timeout.hpp>
 
 
 namespace canbus
@@ -12,7 +13,7 @@ namespace canbus
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
-    class DriverSocket : public Driver, public canbus::Interface
+    class DriverSocket : public Driver
     {
     private:
         uint32_t m_read_timeout;
@@ -20,7 +21,7 @@ namespace canbus
 
 	int m_fd;
 
-	bool checkInput(Timeout timeout);
+	bool checkInput(iodrivers_base::Timeout timeout);
 
 	std::deque<Message> rx_queue;
 	bool m_error;
@@ -124,18 +125,6 @@ namespace canbus
 	/** Closes the file descriptor */
 	void close();
         
-        virtual bool readCanMsg(canbus::Message& msg){
-            if(getPendingMessagesCount() > 0){
-                msg = read();
-                return true;
-            }
-            return false;
-        }
-
-        virtual bool sendCanMsg(const canbus::Message &msg){
-            write(msg);
-            return true;
-        }
     };
 }
 

@@ -14,7 +14,7 @@
 #include <poll.h>
 #include <errno.h>
 
-#include <iodrivers_base.hh>
+//#include <iodrivers_base.hh>
 
 using namespace canbus;
 using iodrivers_base::UnixError;
@@ -263,7 +263,7 @@ bool DriverSocket::checkInput(Timeout timeout)
 
 	res = recvmsg(m_fd, &msgh, 0);
 	if (res == -1 && errno != EAGAIN) 
-            throw unix_error("read(): error in recvmsg()");
+            throw iodrivers_base::UnixError("read(): error in recvmsg()");
 	if (res >= 0) {
 	    /* Receive auxiliary data in msgh */
 	    for (cmsg = CMSG_FIRSTHDR(&msgh); cmsg != NULL;
@@ -329,7 +329,7 @@ Message DriverSocket::read()
     Timeout timeout(m_read_timeout);
     while (rx_queue.empty()) {
 	if (!checkInput(timeout))
-            throw timeout_error(timeout_error::PACKET, "read(): timeout");
+            throw iodrivers_base::TimeoutError(iodrivers_base::TimeoutError::PACKET, "read(): timeout");
     }
     
     Message result = rx_queue.front();
