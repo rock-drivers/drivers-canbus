@@ -125,6 +125,10 @@ namespace canbus
             write(msg);
             return true;
         }
+
+        virtual uint32_t getErrorCount() const{
+            return 0;
+        }
     };
 
     Driver *openCanDevice(std::string const& path, DRIVER_TYPE dType = SOCKET);

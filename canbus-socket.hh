@@ -26,6 +26,7 @@ namespace canbus
 	std::deque<Message> rx_queue;
 	bool m_error;
 	std::string path;
+        uint32_t err_counter;
     public:
         /** The default timeout value in milliseconds
          *
@@ -124,6 +125,8 @@ namespace canbus
 
 	/** Closes the file descriptor */
 	void close();
+
+        virtual uint32_t getErrorCount() const;
         
     };
 }
