@@ -85,3 +85,9 @@ Driver *canbus::openCanDevice(std::string const& path, std::string const& type_u
 
     return NULL;
 }
+
+Interface::Interface(){
+}
+
+Interface::~Interface(){
+}

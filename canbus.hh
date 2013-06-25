@@ -6,10 +6,23 @@
 
 namespace canbus
 {
+    /**
+     * this class implements an generic reader/writer interface for can-busses.
+     * All CAN Drivers (including the orocos Tasks) should implement this interface
+     * to build drivers, that can transparently handle sending/writing can commands
+     */
+    class Interface{
+        public:
+        Interface();
+        virtual ~Interface();
+        virtual bool readCanMsg(canbus::Message& msg) = 0;
+        virtual bool sendCanMsg(const canbus::Message &msg) = 0;
+    };
+
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
-    class Driver
+    class Driver : public Interface
     {
     public:
 	virtual ~Driver();
@@ -99,6 +112,23 @@ namespace canbus
 
 	/** Closes the file descriptor */
 	virtual void close() = 0;
+        
+        virtual bool readCanMsg(canbus::Message& msg){
+            if(getPendingMessagesCount() > 0){
+                msg = read();
+                return true;
+            }
+            return false;
+        }
+
+        virtual bool sendCanMsg(const canbus::Message &msg){
+            write(msg);
+            return true;
+        }
+
+        virtual uint32_t getErrorCount() const{
+            return 0;
+        }
     };
 
     Driver *openCanDevice(std::string const& path, DRIVER_TYPE dType = SOCKET);

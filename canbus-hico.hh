@@ -119,6 +119,7 @@ namespace canbus
 
 	/** Closes the file descriptor */
 	void close();
+    
     };
 }
 
