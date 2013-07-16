@@ -2,6 +2,7 @@
 #include "canbus.hh"
 #include "canbus-hico.hh"
 #include "canbus-hico-pci.hh"
+#include "canbus-2web.hh"
 
 #ifdef HAVE_CAN_H
 #include "canbus-socket.hh"
@@ -57,6 +58,16 @@ Driver *canbus::openCanDevice(std::string const& path, DRIVER_TYPE dType)
     		delete d;
 		break;		
 		//#endif
+    case CAN2WEB:
+		d = new Driver2Web();
+    		if (d->open(path)) {
+			fprintf(stderr,"opened can bus with can2web driver\n");
+			return d;
+    		}
+    		else
+			fprintf(stderr,"no can2web driver found... could not open can2web CAN device!\n");
+    		delete d;
+		break;		
   default : return NULL; 
   }
   return NULL;

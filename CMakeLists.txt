@@ -34,7 +34,7 @@ else()
   message(STATUS "kernel does not support socket-can")
 endif()
 
-ADD_LIBRARY(canbus SHARED canbus.cc canbus-hico.cc canbus-hico-pci.cc ${canSocketSource})
+ADD_LIBRARY(canbus SHARED canbus.cc canbus-hico.cc canbus-hico-pci.cc canbus-2web.cc ${canSocketSource})
 TARGET_LINK_LIBRARIES(canbus ${base_TYPES_LIBRARIES} ${IO_LIBRARIES})
 
 ADD_EXECUTABLE(canbus_test canbus_test.cc)
@@ -51,7 +51,7 @@ INSTALL(TARGETS canbus hico_tool canbus_reset
     LIBRARY DESTINATION lib)
 install(FILES tools/hico_monitor DESTINATION bin
     PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
-INSTALL(FILES canbus.hh canmessage.hh DESTINATION include)
+INSTALL(FILES canbus.hh canmessage.hh canbus-2web.hh DESTINATION include)
 
 CONFIGURE_FILE(Doxyfile.in Doxyfile @ONLY)
 ADD_CUSTOM_TARGET(doc doxygen Doxyfile)
