@@ -93,6 +93,7 @@ Message Driver2Web::read()
     }
     can_msg canMsg;
     canMsg << msg;
+    m_status.time    = base::Time::now();
     m_status.error = canMsg.status;
     result.time    = base::Time::now();
     result.can_id  = 0;

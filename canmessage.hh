@@ -48,6 +48,7 @@ namespace canbus
     
     struct Status
     {
+      base::Time time;
       uint8_t error;
     };
       
