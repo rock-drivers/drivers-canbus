@@ -20,6 +20,7 @@ namespace canbus
         uint32_t m_read_timeout;
         uint32_t m_write_timeout;
 	BAUD_RATE m_baudrate;
+	Status m_status;
 
         int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
 
@@ -75,6 +76,10 @@ namespace canbus
 	/** Sets the baudrate
 	 * */
 	void setBaudrate(BAUD_RATE);
+	
+	/** Gets the Controller Status
+	 * */
+	Status getStatus() const;
 
         /** Reads the next message. It is guaranteed to not block longer than the
          * timeout provided by setReadTimeout().

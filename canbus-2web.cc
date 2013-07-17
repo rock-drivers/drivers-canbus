@@ -11,11 +11,16 @@ using namespace canbus;
 using namespace std;
 using namespace can2web;
 
+//#define CAN_TIME 
+
 Driver2Web::Driver2Web()
-    : iodrivers_base::Driver(CAN_MSG_SIZE_MIN+8)
+    : iodrivers_base::Driver(CAN_MSG_SIZE_MIN+16)
     , m_read_timeout(DEFAULT_TIMEOUT)
     , m_write_timeout(DEFAULT_TIMEOUT) 
-    , m_baudrate(br125) {}
+    , m_baudrate(br125)
+{	
+    m_status.error = 0;
+}
 
 bool Driver2Web::reset()
 {
@@ -23,10 +28,15 @@ bool Driver2Web::reset()
     sprintf(sz,"can_baudrate %i\r",(int)m_baudrate);
     write((uint8_t*)sz);
     usleep(1000);
-    strcpy(sz,"can_fast 1\r");
+#ifdef CAN_TIME
+    sprintf(sz,"can_time 1\r");
     write((uint8_t*)sz);
     usleep(1000);
-    strcpy(sz,"can_stream 1\r");
+#endif
+    sprintf(sz,"can_fast 1\r");
+    write((uint8_t*)sz);
+    usleep(1000);
+    sprintf(sz,"can_stream 1\r");
     write((uint8_t*)sz);
     return true;
 }
@@ -53,6 +63,11 @@ void Driver2Web::setBaudrate(BAUD_RATE br)
   m_baudrate = br;
 }
 
+Status Driver2Web::getStatus() const
+{
+  return m_status;
+}
+
 bool Driver2Web::open(std::string const& path)
 {
     cout <<"Driver2Web::open " <<path <<endl;
@@ -70,15 +85,21 @@ bool Driver2Web::resetBoard()
 
 Message Driver2Web::read()
 {
-    uint8_t *msg = new uint8_t[CAN_MSG_SIZE_MIN+8];
+    uint8_t *msg = new uint8_t[CAN_MSG_SIZE_MIN+16];
     (*msg) = 0;
     Message result;
-    while(*msg < 0x81 || *msg > 0x83){
-      readPacket(msg,CAN_MSG_SIZE_MIN+8/* sizeof(msg)*/, m_read_timeout);
+    while(*msg < CAN_START || *msg > CAN_START_TIME){
+      readPacket(msg,CAN_MSG_SIZE_MIN+16, m_read_timeout);
     }
     can_msg canMsg;
     canMsg << msg;
-    result.time     = base::Time::now();
+    m_status.error = canMsg.status;
+    result.time    = base::Time::now();
+    result.can_id  = 0;
+    result.size = 0;
+    if(*msg == CAN_START_STAT){
+      return result;
+    }    
     result.can_time = base::Time::fromMicroseconds(canMsg.secs*1000000+canMsg.u_secs);
     result.can_id = canMsg.can_id;
     memcpy(result.data,canMsg.data,8);
@@ -114,8 +135,8 @@ void Driver2Web::write(uint8_t *sz)
 
 int Driver2Web::extractPacket(uint8_t const* buffer, size_t buffer_size) const
 {
-    //cout <<"Driver2Web::extractPacket " <<buffer_size <<endl;
-    /*char szOut[512];
+    /*cout <<"Driver2Web::extractPacket " <<buffer_size <<endl;
+    char szOut[512];
     *szOut = 0;
     for (int i=0;i<buffer_size;i++){
       sprintf(szOut+strlen(szOut),"%02x | ",buffer[i]);

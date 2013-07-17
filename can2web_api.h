@@ -41,7 +41,7 @@ struct can_msg {
       can_id |= s[3]<<16;
       can_id |= s[2]<<24;
       rtr_mode_len = s[6];
-      uint8_t len = rtr_mode_len && 0x0F;
+      uint8_t len = rtr_mode_len & 0x0F;
       for (int i=0;i< len;i++){
 	data[i] = s[7+i];
       }
@@ -49,8 +49,9 @@ struct can_msg {
 	return (*this);
       }
       for (int i=0;i< 4;i++){
-	secs = s[7+len+i];
-	u_secs = s[11+len+i];
+	int shift = 8*(3-i);
+	secs |= s[7+len+i]<<shift;
+	u_secs |= s[11+len+i]<<shift;
       }
       return (*this);
     }
