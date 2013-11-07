@@ -28,6 +28,9 @@ bool Driver2Web::reset()
     sprintf(sz,"can_baudrate %i\r",(int)m_baudrate);
     write((uint8_t*)sz);
     usleep(1000);
+    sprintf(sz,"can_extended 2\r");
+    write((uint8_t*)sz);
+    usleep(1000);
 #ifdef CAN_TIME
     sprintf(sz,"can_time 1\r");
     write((uint8_t*)sz);
@@ -121,12 +124,6 @@ void Driver2Web::write(Message const& msg)
     out>>s;
     int len = CAN_MSG_SIZE_MIN+(out.rtr_mode_len&0xF);
     writePacket(s, len, m_write_timeout);
-    /*char szOut[512];
-    sprintf(szOut,"len %i msg.size %i ",len,msg.size);
-    for (int i=0;i<len;i++){
-      sprintf(szOut+strlen(szOut),"%02x | ",s[i]);
-    }
-    cout <<"drivers/canbus wrote: " <<szOut <<endl;*/
 }
 
 void Driver2Web::write(uint8_t *sz)
@@ -136,13 +133,6 @@ void Driver2Web::write(uint8_t *sz)
 
 int Driver2Web::extractPacket(uint8_t const* buffer, size_t buffer_size) const
 {
-    /*cout <<"Driver2Web::extractPacket " <<buffer_size <<endl;
-    char szOut[512];
-    *szOut = 0;
-    for (int i=0;i<buffer_size;i++){
-      sprintf(szOut+strlen(szOut),"%02x | ",buffer[i]);
-    }
-    cout <<szOut <<endl;*/
     for (int i=0;i<buffer_size;i++){
       if(buffer[i]>=0x81 && buffer[i]<=0x83){
 	if(i){
