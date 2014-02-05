@@ -96,6 +96,9 @@ Message Driver2Web::read()
     }
     can_msg canMsg;
     canMsg << msg;
+    if(!canMsg.rtr_mode_len){
+      canMsg.rtr_mode_len = 8;
+    }
     m_status.time    = base::Time::now();
     m_status.error = canMsg.status;
     result.time    = base::Time::now();
@@ -159,7 +162,7 @@ int Driver2Web::extractPacket(uint8_t const* buffer, size_t buffer_size) const
 
 int Driver2Web::getPendingMessagesCount()
 {
-  return 1;
+  return 100;
 }
 
 bool Driver2Web::checkBusOk() 
