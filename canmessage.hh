@@ -11,7 +11,8 @@ namespace canbus
 	SOCKET,
 	HICO,
 	HICO_PCI,
-	VS_CAN
+	VS_CAN,
+	NET_GATEWAY
     };
     
     struct Message

@@ -8,10 +8,10 @@ using namespace std;
 
 int main(int argc, char**argv)
 {
-    if (argc < 2 || argc > 5) 
+    if (argc < 2 || argc > 6)
     {
         cerr
-            << "usage: canbus_test <device> [count] [id] [mask]\n"
+            << "usage: canbus_test <device> <type> [count] [id] [mask]\n"
             << "  count is the count of messages to listen to, or the nolimit keyword\n"
             << "  the id/mask combination filters the CAN IDs to the ones that match can_id & mask == id\n"
             << endl;
@@ -19,38 +19,44 @@ int main(int argc, char**argv)
     }
 
     std::map<int, int> statistics;
-    canbus::Driver * driver = canbus::openCanDevice(argv[1]);
+    canbus::Driver * driver = canbus::openCanDevice(argv[1], argv[2]);
     if (!driver)
         return 1;
     if (!driver->reset())
         return 1;
 
     int64_t count = -1;
-    if (argc >= 3)
+    if (argc >= 4)
     {
-        string count_s = argv[2];
+        string count_s = argv[3];
         if (count_s == "nolimit")
             count = -1;
         else
-            count = boost::lexical_cast<size_t>(argv[2]);
+            count = boost::lexical_cast<size_t>(argv[3]);
     }
 
     unsigned int id   = 0;
     unsigned int mask = 0;
-    if (argc >= 4)
+    if (argc >= 5)
     {
-        id = strtol(argv[3], NULL, 0);
+        id = strtol(argv[4], NULL, 0);
         mask = 0x7FF;
     }
-    if (argc >= 5)
-        mask = strtol(argv[4], NULL, 0);
+    if (argc >= 6)
+        mask = strtol(argv[5], NULL, 0);
 
     cerr << "id: " << hex << id << " mask: " << hex << mask << endl;
 
     int i = 0;
     while(count == -1 || i < count)
     {
-        canbus::Message msg = driver->read();
+        canbus::Message msg;
+        try {
+            msg = driver->read();
+        } catch (...) {
+            continue;
+        }
+
         if ((msg.can_id & mask) != id)
             continue;
 
