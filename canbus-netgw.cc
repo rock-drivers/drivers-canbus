@@ -6,6 +6,7 @@
  */
 
 #include <string.h>
+#include <sys/ioctl.h>
 #include "canbus-netgw.hh"
 #include <base/time.h>
 
@@ -46,29 +47,55 @@ int DriverNetGateway::extractPacket(uint8_t const* buffer, size_t buffer_size) c
         return -buffer_size;
 }
 
-Message DriverNetGateway::read()
+void DriverNetGateway::readOneMessage()
 {
     CanFrame    frame;
-    readPacket(reinterpret_cast<uint8_t*>(&frame), sizeof(CanFrame));
-
-    if (frame.can_id & CAN_ERR_FLAG) {
-        mErrorCounter++;
-        mError = true;
+    if (readPacket(reinterpret_cast<uint8_t*>(&frame), sizeof(CanFrame)) == sizeof(CanFrame)) {
+        if (frame.can_id & CAN_ERR_FLAG) {
+            if (frame.can_id & CAN_ERR_MASK) {
+                mErrorCounter++;
+                mError = true;
+            } else {
+                mError = false;
+            }
+        } else {
+            Message msg;
+            msg.time = base::Time::now();
+            msg.can_time = msg.time;
+            msg.can_id = frame.can_id;
+            memcpy(msg.data, frame.data, 8);
+            msg.size = frame.can_dlc;
+            rx_queue.push_back(msg);
+        }
     }
+}
 
-    Message result;
-    result.time = base::Time::now();
-    result.can_time = result.time;
-    result.can_id = frame.can_id;
-    memcpy(result.data, frame.data, 8);
-    result.size = frame.can_dlc;
+int DriverNetGateway::bufferMessages()
+{
+    int bytes;
+    if (ioctl(getFileDescriptor(), FIONREAD, &bytes) == 0) {
+        for (size_t i = 0; i < bytes / sizeof(CanFrame); i++) {
+            readOneMessage();
+        }
+    }
+    return rx_queue.size();
+}
 
+Message DriverNetGateway::read()
+{
+    while (rx_queue.empty()) {
+        readOneMessage();
+    }
+    Message result = rx_queue.front();
+    rx_queue.pop_front();
     return result;
 }
 
 
 bool DriverNetGateway::read(Message& msg)
 {
+    if (bufferMessages() == 0)
+        return false;
     msg = read();
     return true;
 }
@@ -85,16 +112,19 @@ void DriverNetGateway::write(const Message& msg)
 
 int DriverNetGateway::getPendingMessagesCount()
 {
-    return 0;
+    return bufferMessages();
 }
 
 bool DriverNetGateway::checkBusOk()
 {
-    return true;
+    bufferMessages();
+    return !mError;
 }
 
 void DriverNetGateway::clear()
 {
+    bufferMessages();
+    rx_queue.clear();
     mError = false;
 }
 
@@ -145,4 +175,5 @@ bool DriverNetGateway::reset()
     frame.can_dlc = 8;
     memset(frame.data, 0, 8);
     writePacket(reinterpret_cast<uint8_t*>(&frame), sizeof(frame));
+    return true;
 }

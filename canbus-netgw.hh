@@ -8,6 +8,7 @@
 #ifndef CANBUS_NETGW_HH
 #define CANBUS_NETGW_HH
 
+#include <deque>
 #include "canmessage.hh"
 #include <iodrivers_base/Driver.hpp>
 #include "canbus.hh"
@@ -30,7 +31,13 @@ namespace canbus
         uint32_t mErrorCounter;
         bool    mError;
 
+        std::deque<Message> rx_queue;
+
+
         int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
+
+        void readOneMessage();
+        int bufferMessages();
 
     public:
         static const int DEFAULT_TIMEOUT = 100;
