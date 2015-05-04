@@ -6,6 +6,7 @@
         DFKI/robotik@dfki.de
     </copyright>
     <license>LGPL v2 or later</license>
+    <maintainer>Jens Renken/renken@marum.de</maintainer>
 
     <depend package="base/types" />
     <depend package="drivers/iodrivers_base" />
