@@ -8,6 +8,8 @@
 #include "canbus-socket.hh"
 #endif
 
+#include "canbus-netgw.hh"
+
 #include <stdio.h>
 #include <algorithm>
 #include <string>
@@ -68,6 +70,15 @@ Driver *canbus::openCanDevice(std::string const& path, DRIVER_TYPE dType)
 			fprintf(stderr,"no can2web driver found... could not open can2web CAN device!\n");
     		delete d;
 		break;		
+    case NET_GATEWAY:
+        d = new DriverNetGateway();
+            if (d->open(path)) {
+                fprintf(stderr,"opened can bus with network gateway driver\n");
+                return d;
+            } else
+                fprintf(stderr,"failed connect to network gateway driver... could not open remote network CAN device!\n");
+            delete d;
+        break;
   default : return NULL; 
   }
   return NULL;
@@ -92,6 +103,10 @@ Driver *canbus::openCanDevice(std::string const& path, std::string const& type_u
     if(type == std::string("socket"))
     {
 	return openCanDevice(path, SOCKET);
+    }
+
+    if (type == std::string("net_gateway")) {
+        return openCanDevice(path, NET_GATEWAY);
     }
 
     return NULL;
