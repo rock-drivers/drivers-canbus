@@ -8,11 +8,25 @@
 
 namespace canbus
 {
+
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
     class Driver2Web : public iodrivers_base::Driver, public Driver
     {
+
+        enum BAUD_RATE{
+          br5   = 5,
+          br10  = 10,
+          br20  = 20,
+          br50  = 50,
+          br100 = 100,
+          br125 = 125,
+          br250 = 250,
+          br500 = 500,
+          br1000 = 1000
+        };
+
         //bool sendSetupIOCTL(std::string const& name, int cmd);
         //template<typename T>
         //bool sendSetupIOCTL(std::string const& name, int cmd, T arg);
@@ -73,9 +87,13 @@ namespace canbus
          */
         uint32_t getReadTimeout() const;
 	
-	/** Sets the baudrate
-	 * */
-	void setBaudrate(BAUD_RATE);
+        /** Sets the baudrate
+         * */
+        void setBaudrate(BAUD_RATE);
+
+        /** Sets the baudrate
+         * */
+        void setBaudrate(int);
 	
 	/** Gets the Controller Status
 	 * */
@@ -126,6 +144,12 @@ namespace canbus
 	/** Closes the file descriptor */
 	void close();
     
+	/** check status and print info
+	 *
+	 */
+	void statusCheck(const Status& status);
+
+
     };
 }
 
