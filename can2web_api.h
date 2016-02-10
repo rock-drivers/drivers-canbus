@@ -30,7 +30,7 @@ namespace can2web
         {
         }
 
-        inline can_msg& operator<<(uint8_t *& s)
+        inline can_msg& operator<<(uint8_t const* s)
         {
             start = s[0];
             if (start < CAN_START || start > CAN_START_TIME) {

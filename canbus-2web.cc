@@ -148,18 +148,18 @@ bool Driver2Web::resetBoard()
 
 Message Driver2Web::read()
 {
-    uint8_t *msg = new uint8_t[CAN_MSG_SIZE_MIN + 16];
-    (*msg) = 0;
+    vector<uint8_t> msg(CAN_MSG_SIZE_MIN + 16);
+    msg[0] = 0;
     Message result;
     try {
-        while (*msg < CAN_START || *msg > CAN_START_TIME) {
-            readPacket(msg, CAN_MSG_SIZE_MIN + 16, m_read_timeout);
+        while (msg.at(0) < CAN_START || msg.at(0) > CAN_START_TIME) {
+            readPacket(&msg[0], CAN_MSG_SIZE_MIN + 16, m_read_timeout);
         }
     } catch (iodrivers_base::TimeoutError& ) {
 
     }
     can_msg canMsg;
-    canMsg << msg;
+    canMsg << &(msg[0]);
     if (!canMsg.rtr_mode_len) {
         canMsg.rtr_mode_len = 8;
     }
@@ -168,14 +168,14 @@ Message Driver2Web::read()
     result.time = base::Time::now();
     result.can_id = 0;
     result.size = 0;
-    if (*msg == CAN_START_STAT) {
+    if (msg.at(0) == CAN_START_STAT) {
         return result;
     }
     result.can_time = base::Time::fromMicroseconds(
             canMsg.secs * 1000000 + canMsg.u_secs);
     result.can_id = canMsg.can_id;
     memcpy(result.data, canMsg.data, 8);
-    result.size = canMsg.rtr_mode_len && 0x0F;
+    result.size = canMsg.rtr_mode_len & 0x0F;
     ;
     statusCheck(m_status);
     return result;
@@ -203,12 +203,12 @@ void Driver2Web::write(uint8_t *sz)
 
 int Driver2Web::extractPacket(uint8_t const* buffer, size_t buffer_size) const
 {
-    for (int i = 0; i < buffer_size; i++) {
+    for (size_t i = 0; i < buffer_size; i++) {
         if (buffer[i] >= 0x81 && buffer[i] <= 0x83) {
             if (i) {
                 return -i;
             }
-            int len = 2;
+            size_t len = 2;
             if (*buffer == 0x81 || *buffer == 0x83) {
                 if (buffer_size < CAN_MSG_SIZE_MIN) {
                     return 0;
