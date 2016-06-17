@@ -8,7 +8,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include "canbus-netgw.hh"
-#include <base/time.h>
+#include <base/Time.hpp>
 
 
 #define CAN_EFF_FLAG 0x80000000U /* EFF/SFF is set in the MSB */

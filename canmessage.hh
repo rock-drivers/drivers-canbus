@@ -1,7 +1,7 @@
 #ifndef CANBUS_MESSAGE_HH
 #define CANBUS_MESSAGE_HH
 
-#include <base/time.h>
+#include <base/Time.hpp>
 #include <stdint.h>
 
 #define CAN_ERR_OK  		0x00
