@@ -18,6 +18,9 @@ rock_library(canbus
         DriverSocket.hpp DriverFTDI.hpp ${CAN_SOCKET_HEADERS}
     DEPS_PKGCONFIG base-types base-logging iodrivers_base)
 
+rock_executable(canbus-ftdi
+    SOURCES tools/MainFTDI.cpp
+    DEPS canbus)
 rock_executable(canbus_test
     SOURCES tools/MainTest.cpp
     DEPS canbus
