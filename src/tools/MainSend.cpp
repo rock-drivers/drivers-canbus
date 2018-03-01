@@ -18,9 +18,15 @@ int main(int argc, char** argv)
     std::map<int, int> statistics;
     canbus::Driver * driver = canbus::openCanDevice(argv[1], argv[2]);
     if (!driver)
+    {
+        std::cerr << "failed to open the CAN device" << std::endl;
         return 1;
+    }
     if (!driver->reset())
+    {
+        std::cerr << "failed to reset the CAN device" << std::endl;
         return 1;
+    }
 
     int id;
     int lenght;
