@@ -1,28 +1,29 @@
-#ifndef CANBUS_VSCAN_HH
-#define CANBUS_VSCAN_HH
-#include "canmessage.hh"
-#include "canbus.hh"
+#ifndef CANBUS_HICO_HH
+#define CANBUS_HICO_HH
+
+#include <canbus/Message.hpp>
+#include <canbus/Driver.hpp>
+#include <iodrivers_base/Driver.hpp>
 #include <string>
-#include <deque>
-#include <iodrivers_base.hh>
+
 
 namespace canbus
 {
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
-    class DriverVsCan : public Driver
+    class DriverHico : public iodrivers_base::Driver, public Driver
     {
-        int handle;
+        bool sendSetupIOCTL(std::string const& name, int cmd);
+        template<typename T>
+        bool sendSetupIOCTL(std::string const& name, int cmd, T arg);
+
         uint32_t m_read_timeout;
         uint32_t m_write_timeout;
 
-        std::deque<Message> rx_queue;
-        bool m_error;
-
         base::Time timestampBase;
 
-        bool checkForMessages(Timeout &timeout);
+        int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
 
     public:
         /** The default timeout value in milliseconds
@@ -31,7 +32,7 @@ namespace canbus
          */
         static const int DEFAULT_TIMEOUT = 100;
 
-        DriverVsCan();
+        DriverHico();
 
         /** Opens the given device and resets the CAN interface. It returns
          * true if the initialization was successful and false otherwise
@@ -39,19 +40,19 @@ namespace canbus
         bool open(std::string const& path);
 
         /** Resets the CAN board. This must be called before
-	 *  any calls to reset() on any of the interfaces of the same
-	 *  board
+         *  any calls to reset() on any of the interfaces of the same
+         *  board
          *
          * @return false on error, true on success
          */
-        bool reset_board();
+        bool resetBoard();
         /** Resets the CAN board. This must be called before
-	 *  any calls to reset() on any of the interfaces of the same
-	 *  board
+         *  any calls to reset() on any of the interfaces of the same
+         *  board
          *
          * @return false on error, true on success
          */
-        static bool reset_board(int fd);
+        static bool resetBoard(int fd);
         /** Resets the CAN interface
          *
          * @return false on error, true on success
@@ -109,16 +110,17 @@ namespace canbus
          */
         void clear();
 
-	/** Returns the file descriptor associated with this object. If no file
-	 * descriptor is assigned, returns INVALID_FD
-	 */
-	int getFileDescriptor() const;
+        /** Returns the file descriptor associated with this object. If no file
+         * descriptor is assigned, returns INVALID_FD
+         */
+        int getFileDescriptor() const;
 
-	/** True if a valid file descriptor is assigned to this object */
-	bool isValid() const;
+        /** True if a valid file descriptor is assigned to this object */
+        bool isValid() const;
 
-	/** Closes the file descriptor */
-	void close();
+        /** Closes the file descriptor */
+        void close();
+    
     };
 }
 

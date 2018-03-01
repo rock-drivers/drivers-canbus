@@ -1,49 +1,39 @@
-/*
- * canbus-netgw.hh
- *
- *  Created on: 26.02.2014
- *      Author: jrenken
- */
+#ifndef CANBUS_VSCAN_HH
+#define CANBUS_VSCAN_HH
 
-#ifndef CANBUS_NETGW_HH
-#define CANBUS_NETGW_HH
-
+#include <canbus/Message.hpp>
+#include <canbus/Driver.hpp>
+#include <string>
 #include <deque>
-#include "canmessage.hh"
 #include <iodrivers_base/Driver.hpp>
-#include "canbus.hh"
+#include <iodrivers_base/Timeout.hpp>
 
 namespace canbus
 {
-
-    struct CanFrame {
-        uint32_t can_id;  /* 32 bit CAN_ID + EFF/RTR/ERR flags */
-        uint8_t    can_dlc; /* data length code: 0 .. 8 */
-        uint8_t    data[8] __attribute__((aligned(8)));
-    };
-
-
-    /*
-     *
+    /** This class allows to (i) setup a CAN interface and (ii) having read and
+     * write access to it.
      */
-    class DriverNetGateway : public iodrivers_base::Driver, public Driver
+    class DriverVsCan : public Driver
     {
-        uint32_t mErrorCounter;
-        bool    mError;
+        int handle;
+        uint32_t m_read_timeout;
+        uint32_t m_write_timeout;
 
         std::deque<Message> rx_queue;
+        bool m_error;
 
+        base::Time timestampBase;
 
-        int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
-
-        void readOneMessage();
-        int bufferMessages();
+        bool checkForMessages(iodrivers_base::Timeout &timeout);
 
     public:
+        /** The default timeout value in milliseconds
+         *
+         * @see setTimeout, getTimeout
+         */
         static const int DEFAULT_TIMEOUT = 100;
 
-
-        DriverNetGateway();
+        DriverVsCan();
 
         /** Opens the given device and resets the CAN interface. It returns
          * true if the initialization was successful and false otherwise
@@ -56,12 +46,24 @@ namespace canbus
          *
          * @return false on error, true on success
          */
-        bool resetBoard() { return true; }
+        bool reset_board();
+        /** Resets the CAN board. This must be called before
+         *  any calls to reset() on any of the interfaces of the same
+         *  board
+         *
+         * @return false on error, true on success
+         */
+        static bool reset_board(int fd);
         /** Resets the CAN interface
          *
          * @return false on error, true on success
          */
         bool reset();
+        /** Resets the given CAN interface
+         *
+         * @return true on success, false on error.
+         */
+        static bool reset(int fd);
 
         /** Sets the timeout, in milliseconds, for which we are allowed to wait
          * for write access is write()
@@ -87,16 +89,6 @@ namespace canbus
          */
         Message read();
 
-        /** Reads the next message. It is guaranteed to not block longer than the
-         * timeout provided by setReadTimeout().
-         *
-         * The default timeout value is given by DEFAULT_TIMEOUT
-         *
-         * @param msg   The Message will be put here, if any
-         * @return   true if msg was filled in, false on timeout.
-         */
-        bool read(Message &msg);
-
         /** Writes a message. It is guaranteed to not block longer than the
          * timeout provided in setWriteTimeout().
          *
@@ -108,12 +100,12 @@ namespace canbus
          */
         int getPendingMessagesCount();
 
-        /** Checks if bus reports error, this may indicate a disconnected cable
-         *  this method will only report an error after an message was written
-         *  to the bus
-         */
-        bool checkBusOk();
-
+      /** Checks if bus reports error, this may indicate a disconnected cable
+       *  this method will only report an error after an message was written
+       *  to the bus
+       */
+      bool checkBusOk();
+      
 
         /** Removes all pending messages from the RX queue
          */
@@ -129,12 +121,8 @@ namespace canbus
 
         /** Closes the file descriptor */
         void close();
-
-        virtual uint32_t getErrorCount() const;
-
-
-
     };
+}
 
-} /* namespace iocard_kontron */
-#endif /* CANBUS_NETGW_HH */
+#endif
+

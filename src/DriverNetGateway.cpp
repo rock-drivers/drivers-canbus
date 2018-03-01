@@ -7,7 +7,7 @@
 
 #include <string.h>
 #include <sys/ioctl.h>
-#include "canbus-netgw.hh"
+#include <canbus/DriverNetGateway.hpp>
 #include <base/Time.hpp>
 
 

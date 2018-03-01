@@ -1,12 +1,11 @@
-#ifndef CANBUS_HICO_PCI_HH
-#define CANBUS_HICO_PCI_HH
-
+#ifndef CANBUS_SOCKET_HH
+#define CANBUS_SOCKET_HH
+#include <canbus/Message.hpp>
+#include <canbus/Driver.hpp>
 #include <string>
-
-#include "canmessage.hh"
+#include <deque>
 #include <iodrivers_base/Driver.hpp>
-#include "canbus.hh"
-#include "hicocan.h"
+#include <iodrivers_base/Timeout.hpp>
 
 
 namespace canbus
@@ -14,19 +13,20 @@ namespace canbus
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
-    class DriverHicoPCI : public iodrivers_base::Driver, public Driver
+    class DriverSocket : public Driver
     {
-        bool sendSetupIOCTL(std::string const& name, int cmd);
-        template<typename T>
-        bool sendSetupIOCTL(std::string const& name, int cmd, T arg);
-
+    private:
         uint32_t m_read_timeout;
         uint32_t m_write_timeout;
 
-        base::Time timestampBase;
+        int m_fd;
 
-        int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
+        bool checkInput(iodrivers_base::Timeout timeout);
 
+        std::deque<Message> rx_queue;
+        bool m_error;
+        std::string path;
+        uint32_t err_counter;
     public:
         /** The default timeout value in milliseconds
          *
@@ -34,8 +34,7 @@ namespace canbus
          */
         static const int DEFAULT_TIMEOUT = 100;
 
-        DriverHicoPCI();
-       //~DriverHicoPCI();
+        DriverSocket();
 
         /** Opens the given device and resets the CAN interface. It returns
          * true if the initialization was successful and false otherwise
@@ -43,19 +42,12 @@ namespace canbus
         bool open(std::string const& path);
 
         /** Resets the CAN board. This must be called before
-	 *  any calls to reset() on any of the interfaces of the same
-	 *  board
+         *  any calls to reset() on any of the interfaces of the same
+         *  board
          *
          * @return false on error, true on success
          */
-        bool resetBoard();
-        /** Resets the CAN board. This must be called before
-	 *  any calls to reset() on any of the interfaces of the same
-	 *  board
-         *
-         * @return false on error, true on success
-         */
-        static bool resetBoard(int fd);
+        bool resetBoard() { return true; }
         /** Resets the CAN interface
          *
          * @return false on error, true on success
@@ -91,6 +83,16 @@ namespace canbus
          */
         Message read();
 
+        /** Reads the next message. It is guaranteed to not block longer than the
+         * timeout provided by setReadTimeout().
+         *
+         * The default timeout value is given by DEFAULT_TIMEOUT
+         *
+         * @param msg   The Message will be put here, if any
+         * @return   true if msg was filled in, false on timeout.
+         */
+        bool read(Message &msg);
+
         /** Writes a message. It is guaranteed to not block longer than the
          * timeout provided in setWriteTimeout().
          *
@@ -113,26 +115,19 @@ namespace canbus
          */
         void clear();
 
-	/** Returns the file descriptor associated with this object. If no file
-	 * descriptor is assigned, returns INVALID_FD
-	 */
-	int getFileDescriptor() const;
+        /** Returns the file descriptor associated with this object. If no file
+         * descriptor is assigned, returns INVALID_FD
+         */
+        int getFileDescriptor() const;
 
-	/** True if a valid file descriptor is assigned to this object */
-	bool isValid() const;
+        /** True if a valid file descriptor is assigned to this object */
+        bool isValid() const;
 
-	/** Closes the file descriptor */
-	void close();
- 
-  private:
-    bool setBaudRate(int fd, int Rate);
-	
-public : 
-        canParam canbusParameters;
+        /** Closes the file descriptor */
+        void close();
+
+        virtual uint32_t getErrorCount() const;
         
-        int can_node;
-        	
-	
     };
 }
 

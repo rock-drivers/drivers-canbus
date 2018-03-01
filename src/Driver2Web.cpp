@@ -1,5 +1,5 @@
-#include "canbus-2web.hh"
-#include "can2web_api.h"
+#include <canbus/Driver2Web.hpp>
+#include "vendor/can2web_api.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

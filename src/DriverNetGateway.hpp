@@ -1,40 +1,49 @@
-#ifndef CANBUS_SOCKET_HH
-#define CANBUS_SOCKET_HH
-#include "canmessage.hh"
-#include <string>
-#include <deque>
-#include "canbus.hh"
-#include <iodrivers_base/Driver.hpp>
-#include <iodrivers_base/Timeout.hpp>
+/*
+ * canbus-netgw.hh
+ *
+ *  Created on: 26.02.2014
+ *      Author: jrenken
+ */
 
+#ifndef CANBUS_NETGW_HH
+#define CANBUS_NETGW_HH
+
+#include <deque>
+#include <canbus/Message.hpp>
+#include <canbus/Driver.hpp>
+#include <iodrivers_base/Driver.hpp>
 
 namespace canbus
 {
-    /** This class allows to (i) setup a CAN interface and (ii) having read and
-     * write access to it.
+
+    struct CanFrame {
+        uint32_t can_id;  /* 32 bit CAN_ID + EFF/RTR/ERR flags */
+        uint8_t    can_dlc; /* data length code: 0 .. 8 */
+        uint8_t    data[8] __attribute__((aligned(8)));
+    };
+
+
+    /*
+     *
      */
-    class DriverSocket : public Driver
+    class DriverNetGateway : public iodrivers_base::Driver, public Driver
     {
-    private:
-        uint32_t m_read_timeout;
-        uint32_t m_write_timeout;
+        uint32_t mErrorCounter;
+        bool    mError;
 
-	int m_fd;
+        std::deque<Message> rx_queue;
 
-	bool checkInput(iodrivers_base::Timeout timeout);
 
-	std::deque<Message> rx_queue;
-	bool m_error;
-	std::string path;
-        uint32_t err_counter;
+        int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
+
+        void readOneMessage();
+        int bufferMessages();
+
     public:
-        /** The default timeout value in milliseconds
-         *
-         * @see setTimeout, getTimeout
-         */
         static const int DEFAULT_TIMEOUT = 100;
 
-        DriverSocket();
+
+        DriverNetGateway();
 
         /** Opens the given device and resets the CAN interface. It returns
          * true if the initialization was successful and false otherwise
@@ -42,8 +51,8 @@ namespace canbus
         bool open(std::string const& path);
 
         /** Resets the CAN board. This must be called before
-	 *  any calls to reset() on any of the interfaces of the same
-	 *  board
+         *  any calls to reset() on any of the interfaces of the same
+         *  board
          *
          * @return false on error, true on success
          */
@@ -53,11 +62,6 @@ namespace canbus
          * @return false on error, true on success
          */
         bool reset();
-        /** Resets the given CAN interface
-         *
-         * @return true on success, false on error.
-         */
-	static bool reset(int fd);
 
         /** Sets the timeout, in milliseconds, for which we are allowed to wait
          * for write access is write()
@@ -87,9 +91,9 @@ namespace canbus
          * timeout provided by setReadTimeout().
          *
          * The default timeout value is given by DEFAULT_TIMEOUT
-	 *
-	 * @param msg   The Message will be put here, if any
-	 * @return   true if msg was filled in, false on timeout.
+         *
+         * @param msg   The Message will be put here, if any
+         * @return   true if msg was filled in, false on timeout.
          */
         bool read(Message &msg);
 
@@ -104,32 +108,33 @@ namespace canbus
          */
         int getPendingMessagesCount();
 
-      /** Checks if bus reports error, this may indicate a disconnected cable
-       *  this method will only report an error after an message was written
-       *  to the bus
-       */
-      bool checkBusOk();
-      
+        /** Checks if bus reports error, this may indicate a disconnected cable
+         *  this method will only report an error after an message was written
+         *  to the bus
+         */
+        bool checkBusOk();
+
 
         /** Removes all pending messages from the RX queue
          */
         void clear();
 
-	/** Returns the file descriptor associated with this object. If no file
-	 * descriptor is assigned, returns INVALID_FD
-	 */
-	int getFileDescriptor() const;
+        /** Returns the file descriptor associated with this object. If no file
+         * descriptor is assigned, returns INVALID_FD
+         */
+        int getFileDescriptor() const;
 
-	/** True if a valid file descriptor is assigned to this object */
-	bool isValid() const;
+        /** True if a valid file descriptor is assigned to this object */
+        bool isValid() const;
 
-	/** Closes the file descriptor */
-	void close();
+        /** Closes the file descriptor */
+        void close();
 
         virtual uint32_t getErrorCount() const;
-        
+
+
+
     };
-}
 
-#endif
-
+} /* namespace iocard_kontron */
+#endif /* CANBUS_NETGW_HH */
