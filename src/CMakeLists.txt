@@ -21,10 +21,9 @@ rock_library(canbus
 rock_executable(canbus-ftdi
     SOURCES tools/MainFTDI.cpp
     DEPS canbus)
-rock_executable(canbus_test
-    SOURCES tools/MainTest.cpp
-    DEPS canbus
-    NOINSTALL)
+rock_executable(canbus-monitor
+    SOURCES tools/MainMonitor.cpp
+    DEPS canbus)
 rock_executable(hico_tool tools/hcantool.c)
 rock_executable(canbus_reset tools/MainReset.cpp
     DEPS canbus)
