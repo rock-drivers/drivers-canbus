@@ -48,6 +48,8 @@ int main(int argc, char**argv)
     cerr << "id: " << hex << id << " mask: " << hex << mask << endl;
 
     int i = 0;
+    base::Time firstTime;
+    base::Time firstCanTime;
     while(count == -1 || i < count)
     {
         canbus::Message msg;
@@ -60,9 +62,17 @@ int main(int argc, char**argv)
         if ((msg.can_id & mask) != id)
             continue;
 
+        if (firstTime.isNull())
+        {
+            firstTime = msg.time;
+            firstCanTime = msg.can_time;
+        }
         ++i;
 
-        cout << setw(10) << i << " " << setw(5) << msg.can_id;
+        uint64_t timeDeltaMs = (msg.time - firstTime).toMilliseconds();
+        uint64_t canTimeDeltaMs = (msg.can_time - firstCanTime).toMilliseconds();
+
+        cout << setw(5) << timeDeltaMs << " " << setw(5) << canTimeDeltaMs << " " << setw(10) << i << " " << setw(5) << msg.can_id;
         for (int i = 0; i < msg.size; ++i)
             cout << " " << setw(3) << (int)msg.data[i];
         cout << endl;
