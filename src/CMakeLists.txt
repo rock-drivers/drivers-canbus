@@ -12,11 +12,11 @@ endif()
 rock_library(canbus
     SOURCES Driver.cpp 
         Driver2Web.cpp DriverHico.cpp DriverHicoPCI.cpp DriverNetGateway.cpp
-        DriverSocket.cpp ${CAN_SOCKET_SOURCES}
+        DriverSocket.cpp DriverFTDI.cpp ${CAN_SOCKET_SOURCES}
     HEADERS Driver.hpp Message.hpp
         Driver2Web.hpp DriverHico.hpp DriverHicoPCI.hpp DriverNetGateway.hpp
-        DriverSocket.hpp ${CAN_SOCKET_HEADERS}
-    DEPS_PKGCONFIG base-types iodrivers_base)
+        DriverSocket.hpp DriverFTDI.hpp ${CAN_SOCKET_HEADERS}
+    DEPS_PKGCONFIG base-types base-logging iodrivers_base)
 
 rock_executable(canbus_test
     SOURCES tools/MainTest.cpp
