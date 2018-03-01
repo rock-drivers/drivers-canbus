@@ -267,7 +267,7 @@ int DriverFTDI::processCommand(uint8_t const* cmd, int commandSize, uint8_t* buf
 
     int size = readPacket(buffer, MAX_PACKET_SIZE);
     if (buffer[0] == '\x7')
-        throw FailedCommand(string(reinterpret_cast<char const*>(cmd), commandSize) + " command failed");
+        throw FailedCommand(string(reinterpret_cast<char const*>(cmd), commandSize - 1) + " command failed");
     return size;
 }
 
