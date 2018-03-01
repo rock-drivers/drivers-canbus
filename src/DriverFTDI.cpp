@@ -7,15 +7,15 @@ using namespace std;
 
 struct BAUD_RATE_ARGUMENTS { string asString; char const* cmd; };
 BAUD_RATE_ARGUMENTS baud_rates[] = {
-    { "10k", "S0\n" },
-    { "20k", "S1\n" },
-    { "50k", "S2\n" },
-    { "100k", "S3\n" },
-    { "125k", "S4\n" },
-    { "250k", "S5\n" },
-    { "500k", "S6\n" },
-    { "800k", "S7\n" },
-    { "1M", "S8\n" },
+    { "10k", "S0\r" },
+    { "20k", "S1\r" },
+    { "50k", "S2\r" },
+    { "100k", "S3\r" },
+    { "125k", "S4\r" },
+    { "250k", "S5\r" },
+    { "500k", "S6\r" },
+    { "800k", "S7\r" },
+    { "1M", "S8\r" },
     { "", 0 }
 };
 
@@ -43,10 +43,10 @@ bool DriverFTDI::open(string const& path)
         uri = path;
 
     openURI(uri);
-    processSimpleCommand("Z1\n", 3);
+    processSimpleCommand("Z1\r", 3);
     if (rate_cmd)
         processSimpleCommand(rate_cmd, 3);
-    processSimpleCommand("O\n", 2);
+    processSimpleCommand("O\r", 2);
     return true;
 }
 
@@ -72,7 +72,7 @@ uint32_t DriverFTDI::getReadTimeout() const
 
 bool DriverFTDI::resetBoard()
 {
-    processSimpleCommand("R\n", 2);
+    processSimpleCommand("R\r", 2);
     return true;
 }
 
@@ -180,7 +180,7 @@ void DriverFTDI::write(Message const& msg)
 
     *cursor = msg.size + '0';
     cursor = dumpBytes(cursor + 1, msg.data, msg.size);
-    *cursor = '\n';
+    *cursor = '\r';
     processSimpleCommand(buffer, cursor - buffer + 1);
 }
 
@@ -196,14 +196,14 @@ bool DriverFTDI::isValid() const
 
 void DriverFTDI::close()
 {
-    processSimpleCommand("C\n", 2);
+    processSimpleCommand("C\r", 2);
     iodrivers_base::Driver::close();
 }
 
 DriverFTDI::Status DriverFTDI::getStatus()
 {
     uint8_t buffer[MAX_PACKET_SIZE];
-    processCommand("F\n", 2, buffer);
+    processCommand("F\r", 2, buffer);
 
     uint8_t raw_status;
     parseBytes(&raw_status, buffer, 2);
@@ -246,7 +246,7 @@ bool DriverFTDI::checkBusOk()
 
 void DriverFTDI::clear()
 {
-    processSimpleCommand("E\n", 2);
+    processSimpleCommand("E\r", 2);
     iodrivers_base::Driver::clear();
 }
 
@@ -331,22 +331,22 @@ int DriverFTDI::extractPacket(uint8_t const* buffer, size_t bufferSize) const
         case 'C':
         case 'R':
         {
-            if (buffer[0] == '\n')
+            if (buffer[0] == '\r')
                 return 1;
         }
 
-        case 'F': // replies with XX\n
+        case 'F': // replies with XX\r
         {
             int r = checkNibbleSequence(
                 buffer, bufferSize, 0, 2);
             if (r) return r;
             if (bufferSize < 3)
                 return 0;
-            return (buffer[2] == '\n') ? 3 : -3;
+            return (buffer[2] == '\r') ? 3 : -3;
         }
 
-        case 'V': // replies with Vxxyy\n
-        case 'N': // replies with Nxxyy\n
+        case 'V': // replies with Vxxyy\r
+        case 'N': // replies with Nxxyy\r
         {
             if (buffer[0] != mCurrentCommand)
                 return -1;
@@ -356,15 +356,15 @@ int DriverFTDI::extractPacket(uint8_t const* buffer, size_t bufferSize) const
             if (r) return r;
             if (bufferSize < 6)
                 return 0;
-            return (buffer[5] == '\n') ? 3 : -3;
+            return (buffer[5] == '\r') ? 3 : -3;
         }
-        case 'E': // replies with 'E\n'
+        case 'E': // replies with 'E\r'
         {
             if (buffer[0] != 'E')
                 return -1;
             else if (bufferSize < 2)
                 return 0;
-            else if (buffer[1] == '\n')
+            else if (buffer[1] == '\r')
                 return 2;
             else return -2;
         }
@@ -375,7 +375,7 @@ int DriverFTDI::extractPacket(uint8_t const* buffer, size_t bufferSize) const
                 return 0;
             else if (buffer[0] != 'z')
                 return -1;
-            else if (buffer[1] != '\n')
+            else if (buffer[1] != '\r')
                 return -2;
             else
                 return 2;
@@ -386,7 +386,7 @@ int DriverFTDI::extractPacket(uint8_t const* buffer, size_t bufferSize) const
                 return 0;
             else if (buffer[0] != 'Z')
                 return -1;
-            else if (buffer[1] != '\n')
+            else if (buffer[1] != '\r')
                 return -2;
             else
                 return 2;

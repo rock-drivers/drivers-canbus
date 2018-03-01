@@ -11,5 +11,4 @@
     <depend package="base/types" />
     <depend package="base/logging" />
     <depend package="drivers/iodrivers_base" />
-    <tags>stable</tags>
 </package>
