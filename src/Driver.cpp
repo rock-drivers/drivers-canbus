@@ -86,6 +86,10 @@ Driver *canbus::openCanDevice(std::string const& path, std::string const& type_u
         return openCanDevice(path, NET_GATEWAY);
     }
 
+    if (type == std::string("ftdi")) {
+        return openCanDevice(path, FTDI);
+    }
+
     return NULL;
 }
 
