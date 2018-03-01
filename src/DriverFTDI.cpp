@@ -42,7 +42,12 @@ bool DriverFTDI::open(string const& path)
     else
         uri = path;
 
+    setReadTimeout(100);
+
     openURI(uri);
+    // Force-close. Will fail if the device is already closed
+    try { processSimpleCommand("C\r", 2); }
+    catch(FailedCommand) { }
     processSimpleCommand("Z1\r", 3);
     if (rate_cmd)
         processSimpleCommand(rate_cmd, 3);
