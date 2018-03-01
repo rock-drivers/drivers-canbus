@@ -25,7 +25,7 @@ rock_executable(canbus-monitor
     SOURCES tools/MainMonitor.cpp
     DEPS canbus)
 rock_executable(hico_tool tools/hcantool.c)
-rock_executable(canbus_reset tools/MainReset.cpp
+rock_executable(canbus-reset tools/MainReset.cpp
     DEPS canbus)
 rock_executable(send_tool tools/MainSendTool.cpp
     DEPS canbus
