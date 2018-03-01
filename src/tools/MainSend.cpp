@@ -10,7 +10,7 @@ int main(int argc, char** argv)
     if (argc < 5 || argc > 13) 
     {
         std::cerr
-            << "usage: canbus_send device device_type id length [value1] ... [value8]\n"
+            << "usage: canbus-send device device_type id length [value1] ... [value8] [COUNT] [PERIOD_IN_MS]\n"
             << std::endl;
         return 1;
     }
@@ -42,7 +42,20 @@ int main(int argc, char** argv)
         return 1;
     }
     
-    if(argc != lenght + 5)
+    int count = 1;
+    int period = 0;
+    if(argc >= lenght + 6)
+    {
+        count = strtol(argv[5 + lenght], NULL, 10);
+        if (argc == lenght + 7) {
+            period = strtol(argv[6 + lenght], NULL, 10);
+        }
+        else if (argc != lenght + 6) {
+            std::cerr << std::endl << "Error, number of parameters does not match length" << std::endl;
+            return 1;
+        }
+    }
+    else if(argc != lenght + 5)
     {
         std::cerr << std::endl << "Error, number of parameters does not match length" << std::endl;
         return 1;
@@ -64,8 +77,14 @@ int main(int argc, char** argv)
         std::cout << " 0x" << tmp; 
     }
     std::cout << std::endl;
+    std::cout << "sending " << std::dec << count << " packets at a period of " << period << "ms" << std::endl;
 
-    driver->write(msg);
+    for (int i = 0; i < count; ++i)
+    {
+        driver->write(msg);
+        if (period)
+            usleep(period * 1000);
+    }
 
     return 0;
     

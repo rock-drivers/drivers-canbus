@@ -27,9 +27,8 @@ rock_executable(canbus-monitor
 rock_executable(hico_tool tools/hcantool.c)
 rock_executable(canbus-reset tools/MainReset.cpp
     DEPS canbus)
-rock_executable(send_tool tools/MainSendTool.cpp
-    DEPS canbus
-    NOINSTALL)
+rock_executable(canbus-send tools/MainSend.cpp
+    DEPS canbus)
 
 install(FILES tools/hico_monitor DESTINATION bin
     PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
