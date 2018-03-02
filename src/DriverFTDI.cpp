@@ -95,6 +95,7 @@ bool DriverFTDI::resetBoard()
 
 bool DriverFTDI::reset()
 {
+    mPendingWriteReplies = 0;
     return true;
 }
 
