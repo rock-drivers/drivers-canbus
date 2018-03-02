@@ -40,10 +40,10 @@ int main(int argc, char**argv)
     string command = argv[2];
 
     DriverFTDI* driver = new DriverFTDI();
-    driver->open(uri);
 
     if (command == "status")
     {
+        driver->open(uri);
         DriverFTDI::Status status = driver->getStatus();
         std::cout << "RX state: " << stateToString(status.rx_state) << "\n";
         std::cout << "TX state: " << stateToString(status.tx_state) << "\n";
@@ -52,6 +52,8 @@ int main(int argc, char**argv)
     }
     else if (command == "send")
     {
+        driver->open(uri);
+
         int id = strtol(argv[3], NULL, 16);
         if(id < 0 || id > (1<<11))
         {
@@ -112,6 +114,12 @@ int main(int argc, char**argv)
             catch(iodrivers_base::TimeoutError) {}
         }
         driver->readAllWriteReplies(1000);
+    }
+    else if (command == "reset")
+    {
+        driver->openURI(uri);
+        driver->writePacket(reinterpret_cast<uint8_t const*>("C\r"), 2);
+        driver->resetBoard();
     }
 
     return 0;
