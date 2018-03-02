@@ -43,6 +43,7 @@ bool DriverFTDI::open(string const& path)
         uri = path;
 
     setReadTimeout(100);
+    setWriteTimeout(100);
 
     openURI(uri);
     // Force-close. Will fail if the device is already closed
@@ -52,6 +53,7 @@ bool DriverFTDI::open(string const& path)
     if (rate_cmd)
         processSimpleCommand(rate_cmd, 3);
     processSimpleCommand("O\r", 2);
+    mPendingWriteReplies = 0;
     return true;
 }
 
@@ -165,6 +167,12 @@ uint8_t* dumpBytes(uint8_t* output, uint8_t const* input, int byte_size)
 
 void DriverFTDI::write(Message const& msg)
 {
+    asyncWrite(msg);
+    readWriteReply(getReadTimeout());
+}
+
+void DriverFTDI::asyncWrite(Message const& msg)
+{
     uint8_t raw_can_id[4];
     raw_can_id[0] = (msg.can_id >> 24) & 0xFF;
     raw_can_id[1] = (msg.can_id >> 16) & 0xFF;
@@ -186,7 +194,31 @@ void DriverFTDI::write(Message const& msg)
     *cursor = msg.size + '0';
     cursor = dumpBytes(cursor + 1, msg.data, msg.size);
     *cursor = '\r';
-    processSimpleCommand(buffer, cursor - buffer + 1);
+    writePacket(buffer, cursor - buffer + 1);
+    mPendingWriteReplies++;
+}
+
+int DriverFTDI::readWriteReply(int timeout)
+{
+    if (mPendingWriteReplies == 0)
+        throw std::runtime_error("not expecting a write reply");
+
+    uint8_t buffer[MAX_PACKET_SIZE];
+    readReply('t', buffer, timeout);
+    return mPendingWriteReplies;
+}
+
+void DriverFTDI::readAllWriteReplies(int timeout)
+{
+    while (mPendingWriteReplies)
+    {
+        readWriteReply(timeout);
+    }
+}
+
+int DriverFTDI::getPendingWriteReplies() const
+{
+    return mPendingWriteReplies;
 }
 
 int DriverFTDI::getFileDescriptor() const
@@ -208,7 +240,8 @@ void DriverFTDI::close()
 DriverFTDI::Status DriverFTDI::getStatus()
 {
     uint8_t buffer[MAX_PACKET_SIZE];
-    processCommand("F\r", 2, buffer);
+    writeCommand("F\r", 2);
+    readReply('F', buffer);
 
     uint8_t raw_status;
     parseBytes(&raw_status, buffer, 2);
@@ -255,31 +288,41 @@ void DriverFTDI::clear()
     iodrivers_base::Driver::clear();
 }
 
-int DriverFTDI::processCommand(char const* cmd, int commandSize, uint8_t* buffer)
-{
-    return processCommand(reinterpret_cast<uint8_t const*>(cmd), commandSize, buffer);
-}
-
-int DriverFTDI::processCommand(uint8_t const* cmd, int commandSize, uint8_t* buffer)
-{
-    mCurrentCommand = cmd[0];
-    writePacket(cmd, commandSize);
-
-    int size = readPacket(buffer, MAX_PACKET_SIZE);
-    if (buffer[0] == '\x7')
-        throw FailedCommand(string(reinterpret_cast<char const*>(cmd), commandSize - 1) + " command failed");
-    return size;
-}
-
 void DriverFTDI::processSimpleCommand(char const* cmd, int commandSize)
 {
-    return processSimpleCommand(reinterpret_cast<uint8_t const*>(cmd), commandSize);
+    writeCommand(cmd, commandSize);
+
+    uint8_t buffer[MAX_PACKET_SIZE];
+    readReply(cmd[0], buffer);
 }
 
 void DriverFTDI::processSimpleCommand(uint8_t const* cmd, int commandSize)
 {
-    uint8_t buffer[MAX_PACKET_SIZE];
-    processCommand(cmd, commandSize, buffer);
+    return processSimpleCommand(reinterpret_cast<char const*>(cmd), commandSize);
+}
+
+void DriverFTDI::writeCommand(char const* cmd, int commandSize)
+{
+    return writeCommand(reinterpret_cast<uint8_t const*>(cmd), commandSize);
+}
+
+void DriverFTDI::writeCommand(uint8_t const* cmd, int commandSize)
+{
+    writePacket(cmd, commandSize);
+}
+
+int DriverFTDI::readReply(char command, uint8_t* buffer)
+{
+    return readReply(command, buffer, getReadTimeout());
+}
+
+int DriverFTDI::readReply(char command, uint8_t* buffer, int timeout)
+{
+    mCurrentCommand = command;
+    int size = readPacket(buffer, MAX_PACKET_SIZE, timeout);
+    if (buffer[0] == '\x7')
+        throw FailedCommand(string(&command, 1) + " command failed");
+    return size;
 }
 
 static bool isNibble(char c)

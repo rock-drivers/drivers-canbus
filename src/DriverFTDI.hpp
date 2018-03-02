@@ -81,6 +81,12 @@ namespace canbus
         virtual Message read();
 
         virtual void write(Message const& msg);
+        void asyncWrite(Message const& msg);
+
+        int readWriteReply(int timeout = 0);
+        void readAllWriteReplies(int timeout = 0);
+        int getPendingWriteReplies() const;
+
 
         /** Removes all pending messages from the RX queue
          */
@@ -111,8 +117,11 @@ namespace canbus
 
     private:
         char mCurrentCommand;
-        int processCommand(char const* cmd, int commandSize, uint8_t* output);
-        int processCommand(uint8_t const* cmd, int commandSize, uint8_t* output);
+        int mPendingWriteReplies;
+        void writeCommand(char const* cmd, int commandSize);
+        void writeCommand(uint8_t const* cmd, int commandSize);
+        int readReply(char cmd, uint8_t* buffer);
+        int readReply(char cmd, uint8_t* buffer, int timeout);
         void processSimpleCommand(char const* cmd, int commandSize);
         void processSimpleCommand(uint8_t const* cmd, int commandSize);
         int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
