@@ -1,5 +1,5 @@
 #include <iostream>
-#include <canbus/DriverFTDI.hpp>
+#include <canbus/DriverEasySYNC.hpp>
 #include <iomanip>
 #include <map>
 #include <boost/lexical_cast.hpp>
@@ -7,17 +7,17 @@
 using namespace std;
 using namespace canbus;
 
-static std::string stateToString(DriverFTDI::BUS_STATE bus_state)
+static std::string stateToString(DriverEasySYNC::BUS_STATE bus_state)
 {
     switch(bus_state)
     {
-        case DriverFTDI::OK:
+        case DriverEasySYNC::OK:
             return "OK";
-        case DriverFTDI::WARNING:
+        case DriverEasySYNC::WARNING:
             return "WARNING";
-        case DriverFTDI::PASSIVE:
+        case DriverEasySYNC::PASSIVE:
             return "PASSIVE";
-        case DriverFTDI::OFF:
+        case DriverEasySYNC::OFF:
             return "OFF";
         default:
             throw std::invalid_argument("invalid bus state");
@@ -29,9 +29,9 @@ int main(int argc, char**argv)
     if (argc < 3)
     {
         cerr
-            << "usage: canbus-ftdi <uri> COMMAND\n"
-            << "   canbus-ftdi <uri> status\n"
-            << "   canbus-ftdi <uri> send id length byte0 [byte1]... [COUNT] [PERIOD_MS]\n"
+            << "usage: canbus-easysync <uri> COMMAND\n"
+            << "   canbus-easysync <uri> status\n"
+            << "   canbus-easysync <uri> send id length byte0 [byte1]... [COUNT] [PERIOD_MS]\n"
             << endl;
         return 1;
     }
@@ -39,12 +39,12 @@ int main(int argc, char**argv)
     string uri = argv[1];
     string command = argv[2];
 
-    DriverFTDI* driver = new DriverFTDI();
+    DriverEasySYNC* driver = new DriverEasySYNC();
 
     if (command == "status")
     {
         driver->open(uri);
-        DriverFTDI::Status status = driver->getStatus();
+        DriverEasySYNC::Status status = driver->getStatus();
         std::cout << "RX state: " << stateToString(status.rx_state) << "\n";
         std::cout << "TX state: " << stateToString(status.tx_state) << "\n";
         std::cout << "RX buffer 0 overflow: " << status.rx_buffer0_overflow << "\n";

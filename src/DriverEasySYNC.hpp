@@ -1,5 +1,5 @@
-#ifndef CANBUS_DRIVER_FTDI_HH
-#define CANBUS_DRIVER_FTDI_HH
+#ifndef CANBUS_DRIVER_EASY_SYNC_HH
+#define CANBUS_DRIVER_EASY_SYNC_HH
 
 #include <iodrivers_base/Driver.hpp>
 #include <canbus/Driver.hpp>
@@ -9,7 +9,7 @@ namespace canbus
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
-    class DriverFTDI : public iodrivers_base::Driver, public Driver
+    class DriverEasySYNC : public iodrivers_base::Driver, public Driver
     {
     public:
         static const int MAX_PACKET_SIZE = 1024;
@@ -38,7 +38,7 @@ namespace canbus
             bool rx_buffer1_overflow;
         };
 
-        DriverFTDI();
+        DriverEasySYNC();
 
         /** Opens the device
          * 

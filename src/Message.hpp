@@ -22,7 +22,7 @@ namespace canbus
         VS_CAN,
         CAN2WEB,
         NET_GATEWAY,
-        FTDI
+        EASY_SYNC
     };
     
     struct Message

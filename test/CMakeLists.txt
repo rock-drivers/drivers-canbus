@@ -1,3 +1,3 @@
 rock_gtest(test_suite suite.cpp
-    test_DriverFTDI.cpp
+    test_DriverEasySYNC.cpp
     DEPS canbus)

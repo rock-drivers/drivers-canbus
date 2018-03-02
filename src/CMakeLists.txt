@@ -12,14 +12,14 @@ endif()
 rock_library(canbus
     SOURCES Driver.cpp 
         Driver2Web.cpp DriverHico.cpp DriverHicoPCI.cpp DriverNetGateway.cpp
-        DriverSocket.cpp DriverFTDI.cpp ${CAN_SOCKET_SOURCES}
+        DriverSocket.cpp DriverEasySYNC.cpp ${CAN_SOCKET_SOURCES}
     HEADERS Driver.hpp Message.hpp
         Driver2Web.hpp DriverHico.hpp DriverHicoPCI.hpp DriverNetGateway.hpp
-        DriverSocket.hpp DriverFTDI.hpp ${CAN_SOCKET_HEADERS}
+        DriverSocket.hpp DriverEasySYNC.hpp ${CAN_SOCKET_HEADERS}
     DEPS_PKGCONFIG base-types base-logging iodrivers_base)
 
-rock_executable(canbus-ftdi
-    SOURCES tools/MainFTDI.cpp
+rock_executable(canbus-easysync
+    SOURCES tools/MainEasySYNC.cpp
     DEPS canbus)
 rock_executable(canbus-monitor
     SOURCES tools/MainMonitor.cpp

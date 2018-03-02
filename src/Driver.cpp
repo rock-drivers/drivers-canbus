@@ -2,7 +2,7 @@
 #include <canbus/DriverHico.hpp>
 #include <canbus/DriverHicoPCI.hpp>
 #include <canbus/Driver2Web.hpp>
-#include <canbus/DriverFTDI.hpp>
+#include <canbus/DriverEasySYNC.hpp>
 #include <canbus/DriverSocket.hpp>
 #include <canbus/DriverNetGateway.hpp>
 #include <base-logging/Logging.hpp>
@@ -43,8 +43,8 @@ Driver *canbus::openCanDevice(std::string const& path, DRIVER_TYPE dType)
             driver.reset(new DriverNetGateway());
             break;
 
-        case FTDI:
-            driver.reset(new DriverFTDI());
+        case EASY_SYNC:
+            driver.reset(new DriverEasySYNC());
             break;
 
         default:
@@ -86,8 +86,8 @@ Driver *canbus::openCanDevice(std::string const& path, std::string const& type_u
         return openCanDevice(path, NET_GATEWAY);
     }
 
-    if (type == std::string("ftdi")) {
-        return openCanDevice(path, FTDI);
+    if (type == std::string("easy_sync")) {
+        return openCanDevice(path, EASY_SYNC);
     }
 
     return NULL;

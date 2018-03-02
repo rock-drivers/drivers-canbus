@@ -1,5 +1,5 @@
 #include <string>
-#include <canbus/DriverFTDI.hpp>
+#include <canbus/DriverEasySYNC.hpp>
 #include <base/Time.hpp>
 #include <linux/serial.h>
 #include <sys/ioctl.h>
@@ -21,10 +21,10 @@ BAUD_RATE_ARGUMENTS baud_rates[] = {
     { "", 0 }
 };
 
-DriverFTDI::DriverFTDI()
+DriverEasySYNC::DriverEasySYNC()
     : iodrivers_base::Driver(MAX_PACKET_SIZE) {}
 
-bool DriverFTDI::open(string const& path)
+bool DriverEasySYNC::open(string const& path)
 {
     std::string uri;
     unsigned int colon = path.find_last_of(":");
@@ -67,33 +67,33 @@ bool DriverFTDI::open(string const& path)
     return true;
 }
 
-void DriverFTDI::setWriteTimeout(uint32_t timeout)
+void DriverEasySYNC::setWriteTimeout(uint32_t timeout)
 {
     iodrivers_base::Driver::setWriteTimeout(base::Time::fromMilliseconds(timeout));
 }
 
-uint32_t DriverFTDI::getWriteTimeout() const
+uint32_t DriverEasySYNC::getWriteTimeout() const
 {
     return iodrivers_base::Driver::getWriteTimeout().toMilliseconds();
 }
 
-void DriverFTDI::setReadTimeout(uint32_t timeout)
+void DriverEasySYNC::setReadTimeout(uint32_t timeout)
 {
     iodrivers_base::Driver::setReadTimeout(base::Time::fromMilliseconds(timeout));
 }
 
-uint32_t DriverFTDI::getReadTimeout() const
+uint32_t DriverEasySYNC::getReadTimeout() const
 {
     return iodrivers_base::Driver::getReadTimeout().toMilliseconds();
 }
 
-bool DriverFTDI::resetBoard()
+bool DriverEasySYNC::resetBoard()
 {
     processSimpleCommand("R\r", 2);
     return true;
 }
 
-bool DriverFTDI::reset()
+bool DriverEasySYNC::reset()
 {
     mPendingWriteReplies = 0;
     return true;
@@ -118,7 +118,7 @@ uint8_t const* parseBytes(uint8_t* output, uint8_t const* input, int byte_size)
     return input + byte_size * 2;
 }
 
-Message DriverFTDI::read()
+Message DriverEasySYNC::read()
 {
     uint8_t buffer[MAX_PACKET_SIZE];
     int size = readPacket(buffer, MAX_PACKET_SIZE);
@@ -176,13 +176,13 @@ uint8_t* dumpBytes(uint8_t* output, uint8_t const* input, int byte_size)
     return output + byte_size * 2;
 }
 
-void DriverFTDI::write(Message const& msg)
+void DriverEasySYNC::write(Message const& msg)
 {
     asyncWrite(msg);
     readWriteReply(getReadTimeout());
 }
 
-void DriverFTDI::asyncWrite(Message const& msg)
+void DriverEasySYNC::asyncWrite(Message const& msg)
 {
     uint8_t raw_can_id[4];
     raw_can_id[0] = (msg.can_id >> 24) & 0xFF;
@@ -209,7 +209,7 @@ void DriverFTDI::asyncWrite(Message const& msg)
     mPendingWriteReplies++;
 }
 
-int DriverFTDI::readWriteReply(int timeout)
+int DriverEasySYNC::readWriteReply(int timeout)
 {
     if (mPendingWriteReplies == 0)
         throw std::runtime_error("not expecting a write reply");
@@ -219,7 +219,7 @@ int DriverFTDI::readWriteReply(int timeout)
     return mPendingWriteReplies;
 }
 
-void DriverFTDI::readAllWriteReplies(int timeout)
+void DriverEasySYNC::readAllWriteReplies(int timeout)
 {
     while (mPendingWriteReplies)
     {
@@ -227,28 +227,28 @@ void DriverFTDI::readAllWriteReplies(int timeout)
     }
 }
 
-int DriverFTDI::getPendingWriteReplies() const
+int DriverEasySYNC::getPendingWriteReplies() const
 {
     return mPendingWriteReplies;
 }
 
-int DriverFTDI::getFileDescriptor() const
+int DriverEasySYNC::getFileDescriptor() const
 {
     return iodrivers_base::Driver::getFileDescriptor();
 }
 
-bool DriverFTDI::isValid() const
+bool DriverEasySYNC::isValid() const
 {
     return iodrivers_base::Driver::isValid();
 }
 
-void DriverFTDI::close()
+void DriverEasySYNC::close()
 {
     processSimpleCommand("C\r", 2);
     iodrivers_base::Driver::close();
 }
 
-DriverFTDI::Status DriverFTDI::getStatus()
+DriverEasySYNC::Status DriverEasySYNC::getStatus()
 {
     uint8_t buffer[MAX_PACKET_SIZE];
     writeCommand("F\r", 2);
@@ -286,20 +286,20 @@ DriverFTDI::Status DriverFTDI::getStatus()
     return status;
 }
 
-bool DriverFTDI::checkBusOk()
+bool DriverEasySYNC::checkBusOk()
 {
     Status status = getStatus();
     return status.rx_state == OK &&
         status.tx_state == OK;
 }
 
-void DriverFTDI::clear()
+void DriverEasySYNC::clear()
 {
     processSimpleCommand("E\r", 2);
     iodrivers_base::Driver::clear();
 }
 
-void DriverFTDI::processSimpleCommand(char const* cmd, int commandSize)
+void DriverEasySYNC::processSimpleCommand(char const* cmd, int commandSize)
 {
     writeCommand(cmd, commandSize);
 
@@ -307,27 +307,27 @@ void DriverFTDI::processSimpleCommand(char const* cmd, int commandSize)
     readReply(cmd[0], buffer);
 }
 
-void DriverFTDI::processSimpleCommand(uint8_t const* cmd, int commandSize)
+void DriverEasySYNC::processSimpleCommand(uint8_t const* cmd, int commandSize)
 {
     return processSimpleCommand(reinterpret_cast<char const*>(cmd), commandSize);
 }
 
-void DriverFTDI::writeCommand(char const* cmd, int commandSize)
+void DriverEasySYNC::writeCommand(char const* cmd, int commandSize)
 {
     return writeCommand(reinterpret_cast<uint8_t const*>(cmd), commandSize);
 }
 
-void DriverFTDI::writeCommand(uint8_t const* cmd, int commandSize)
+void DriverEasySYNC::writeCommand(uint8_t const* cmd, int commandSize)
 {
     writePacket(cmd, commandSize);
 }
 
-int DriverFTDI::readReply(char command, uint8_t* buffer)
+int DriverEasySYNC::readReply(char command, uint8_t* buffer)
 {
     return readReply(command, buffer, getReadTimeout());
 }
 
-int DriverFTDI::readReply(char command, uint8_t* buffer, int timeout)
+int DriverEasySYNC::readReply(char command, uint8_t* buffer, int timeout)
 {
     mCurrentCommand = command;
     int size = readPacket(buffer, MAX_PACKET_SIZE, timeout);
@@ -351,7 +351,7 @@ static int checkNibbleSequence(uint8_t const* buffer, int bufferSize, int offset
     return 0;
 }
 
-int DriverFTDI::extractPacket(uint8_t const* buffer, size_t bufferSize) const
+int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) const
 {
     if (bufferSize == 0)
         return 0;

@@ -1,5 +1,5 @@
 #include "test_Helpers.hpp"
-#include <canbus/DriverFTDI.hpp>
+#include <canbus/DriverEasySYNC.hpp>
 #include <imu_advanced_navigation_anpp/Protocol.hpp>
 
 using namespace std;
@@ -7,7 +7,7 @@ using namespace canbus;
 using ::testing::ElementsAre;
 using ::testing::ContainerEq;
 
-struct DriverTest : ::testing::Test, iodrivers_base::Fixture<DriverFTDI>
+struct DriverTest : ::testing::Test, iodrivers_base::Fixture<DriverEasySYNC>
 {
     DriverTest()
     {
@@ -28,7 +28,7 @@ struct DriverTest : ::testing::Test, iodrivers_base::Fixture<DriverFTDI>
     {
         uint8_t const* cmd_int8 = reinterpret_cast<uint8_t const*>(cmd);
         uint8_t const* reply_int8 = reinterpret_cast<uint8_t const*>(reply);
-        iodrivers_base::Fixture<DriverFTDI>::EXPECT_REPLY(
+        iodrivers_base::Fixture<DriverEasySYNC>::EXPECT_REPLY(
             std::vector<uint8_t>(cmd_int8, cmd_int8 + strlen(cmd)),
             std::vector<uint8_t>(reply_int8, reply_int8 + strlen(reply))
         );
@@ -39,7 +39,7 @@ struct DriverTest : ::testing::Test, iodrivers_base::Fixture<DriverFTDI>
         uint8_t const* msg_int8 =
             reinterpret_cast<uint8_t const*>(msg);
         std::vector<uint8_t> packet(msg_int8, msg_int8 + strlen(msg));
-        iodrivers_base::Fixture<DriverFTDI>::pushDataToDriver(packet);
+        iodrivers_base::Fixture<DriverEasySYNC>::pushDataToDriver(packet);
     }
 };
 
@@ -170,9 +170,9 @@ TEST_F(DriverTest, it_parses_a_status_message)
 
     IODRIVERS_BASE_MOCK();
     EXPECT_REPLY("F\n", "C6\n");
-    DriverFTDI::Status status = driver.getStatus();
-    ASSERT_EQ(status.tx_state, DriverFTDI::WARNING);
-    ASSERT_EQ(status.rx_state, DriverFTDI::WARNING);
+    DriverEasySYNC::Status status = driver.getStatus();
+    ASSERT_EQ(status.tx_state, DriverEasySYNC::WARNING);
+    ASSERT_EQ(status.rx_state, DriverEasySYNC::WARNING);
     ASSERT_TRUE(status.rx_buffer0_overflow);
     ASSERT_TRUE(status.rx_buffer1_overflow);
 }
@@ -183,9 +183,9 @@ TEST_F(DriverTest, it_determines_the_state_using_the_worst_case)
 
     IODRIVERS_BASE_MOCK();
     EXPECT_REPLY("F\n", "3E\n");
-    DriverFTDI::Status status = driver.getStatus();
-    ASSERT_EQ(status.tx_state, DriverFTDI::OFF);
-    ASSERT_EQ(status.rx_state, DriverFTDI::PASSIVE);
+    DriverEasySYNC::Status status = driver.getStatus();
+    ASSERT_EQ(status.tx_state, DriverEasySYNC::OFF);
+    ASSERT_EQ(status.rx_state, DriverEasySYNC::PASSIVE);
 }
 
 TEST_F(DriverTest, it_handles_an_all_OK_message)
@@ -194,9 +194,9 @@ TEST_F(DriverTest, it_handles_an_all_OK_message)
 
     IODRIVERS_BASE_MOCK();
     EXPECT_REPLY("F\n", "00\n");
-    DriverFTDI::Status status = driver.getStatus();
-    ASSERT_EQ(status.tx_state, DriverFTDI::OK);
-    ASSERT_EQ(status.rx_state, DriverFTDI::OK);
+    DriverEasySYNC::Status status = driver.getStatus();
+    ASSERT_EQ(status.tx_state, DriverEasySYNC::OK);
+    ASSERT_EQ(status.rx_state, DriverEasySYNC::OK);
     ASSERT_FALSE(status.rx_buffer0_overflow);
     ASSERT_FALSE(status.rx_buffer1_overflow);
 }
