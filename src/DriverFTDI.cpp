@@ -1,6 +1,8 @@
 #include <string>
 #include <canbus/DriverFTDI.hpp>
 #include <base/Time.hpp>
+#include <linux/serial.h>
+#include <sys/ioctl.h>
 
 using namespace canbus;
 using namespace std;
@@ -46,6 +48,14 @@ bool DriverFTDI::open(string const& path)
     setWriteTimeout(100);
 
     openURI(uri);
+    if (path.substr(0, 6) == "serial")
+    {
+        struct serial_struct ss;
+        ioctl(getFileDescriptor(), TIOCGSERIAL, &ss);
+        ss.flags |= ASYNC_LOW_LATENCY; // (0x2000)
+        ioctl(getFileDescriptor(), TIOCSSERIAL, &ss);
+    }
+
     // Force-close. Will fail if the device is already closed
     try { processSimpleCommand("C\r", 2); }
     catch(FailedCommand) { }
