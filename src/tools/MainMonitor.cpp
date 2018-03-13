@@ -46,7 +46,7 @@ int main(int argc, char**argv)
         mask = strtol(argv[5], NULL, 0);
 
     cerr << "id: " << hex << id << " mask: " << hex << mask << endl;
-    cout << setw(5) << "t" << " " << setw(5) << "can_t" << " " << setw(10) << "index" << " " << setw(6) << "can_id" << " " << setw(4) << "size";
+    cout << setw(10) << "t" << " " << setw(10) << "can_t" << " " << setw(10) << "index" << " " << setw(6) << "can_id" << " " << setw(4) << "size";
     for (int byte_i = 0; byte_i < 8; ++byte_i)
         cout << " " << setw(3) << byte_i;
     cout << endl;
@@ -76,7 +76,7 @@ int main(int argc, char**argv)
         uint64_t timeDeltaMs = (msg.time - firstTime).toMilliseconds();
         uint64_t canTimeDeltaMs = (msg.can_time - firstCanTime).toMilliseconds();
 
-        cout << setw(5) << timeDeltaMs << " " << setw(5) << canTimeDeltaMs << " " << setw(10) << i << " " << setw(6) << hex << msg.can_id << " " << setw(4) << std::dec << (int)msg.size;
+        cout << dec << setw(10) << timeDeltaMs << " " << setw(10) << canTimeDeltaMs << " " << setw(10) << i << " " << setw(6) << hex << msg.can_id << " " << setw(4) << std::dec << (int)msg.size;
         for (int i = 0; i < msg.size; ++i)
             cout << " " << setw(3) << std::hex << (int)msg.data[i];
         cout << endl;
