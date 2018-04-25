@@ -1,7 +1,9 @@
-#ifndef CANBUS_HH
-#define CANBUS_HH
-#include "canmessage.hh"
+#ifndef CANBUS_DRIVER_HH
+#define CANBUS_DRIVER_HH
+
+#include <canbus/Message.hpp>
 #include <string>
+
 #define CANBUS_VERSION 101
 
 namespace canbus
@@ -25,7 +27,7 @@ namespace canbus
     class Driver : public Interface
     {
     public:
-	virtual ~Driver();
+        virtual ~Driver();
         /** The default timeout value in milliseconds
          *
          * @see setTimeout, getTimeout
@@ -38,8 +40,8 @@ namespace canbus
         virtual bool open(std::string const& path) = 0;
 
         /** Resets the CAN board. This must be called before
-	 *  any calls to reset() on any of the interfaces of the same
-	 *  board
+         *  any calls to reset() on any of the interfaces of the same
+         *  board
          *
          * @return false on error, true on success
          */
@@ -91,28 +93,28 @@ namespace canbus
          */
         virtual int getPendingMessagesCount() = 0;
 
-	/** Checks if bus reports error, this may indicate a disconnected cable
-	 *  this method will only report an error after an message was written
-	 *  to the bus
-	 */
-	virtual bool checkBusOk() = 0;
+        /** Checks if bus reports error, this may indicate a disconnected cable
+         *  this method will only report an error after an message was written
+         *  to the bus
+         */
+        virtual bool checkBusOk() = 0;
       
 
         /** Removes all pending messages from the RX queue
          */
         virtual void clear() = 0;
 
-	/** Returns the file descriptor associated with this object. If no file
-	 * descriptor is assigned, returns INVALID_FD
-	 */
-	virtual int getFileDescriptor() const = 0;
+        /** Returns the file descriptor associated with this object. If no file
+         * descriptor is assigned, returns INVALID_FD
+         */
+        virtual int getFileDescriptor() const = 0;
 
-	/** True if a valid file descriptor is assigned to this object */
-	virtual bool isValid() const = 0;
+        /** True if a valid file descriptor is assigned to this object */
+        virtual bool isValid() const = 0;
 
-	/** Closes the file descriptor */
-	virtual void close() = 0;
-        
+        /** Closes the file descriptor */
+        virtual void close() = 0;
+
         virtual bool readCanMsg(canbus::Message& msg){
             if(getPendingMessagesCount() > 0){
                 msg = read();

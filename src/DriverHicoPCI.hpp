@@ -1,17 +1,18 @@
-#ifndef CANBUS_HICO_HH
-#define CANBUS_HICO_HH
-#include "canmessage.hh"
-#include <iodrivers_base/Driver.hpp>
-#include "canbus.hh"
+#ifndef CANBUS_HICO_PCI_HH
+#define CANBUS_HICO_PCI_HH
+
 #include <string>
 
+#include <canbus/Message.hpp>
+#include <canbus/Driver.hpp>
+#include <iodrivers_base/Driver.hpp>
 
 namespace canbus
 {
     /** This class allows to (i) setup a CAN interface and (ii) having read and
      * write access to it.
      */
-    class DriverHico : public iodrivers_base::Driver, public Driver
+    class DriverHicoPCI : public iodrivers_base::Driver, public Driver
     {
         bool sendSetupIOCTL(std::string const& name, int cmd);
         template<typename T>
@@ -31,7 +32,8 @@ namespace canbus
          */
         static const int DEFAULT_TIMEOUT = 100;
 
-        DriverHico();
+        DriverHicoPCI();
+        //~DriverHicoPCI();
 
         /** Opens the given device and resets the CAN interface. It returns
          * true if the initialization was successful and false otherwise
@@ -39,15 +41,15 @@ namespace canbus
         bool open(std::string const& path);
 
         /** Resets the CAN board. This must be called before
-	 *  any calls to reset() on any of the interfaces of the same
-	 *  board
+         *  any calls to reset() on any of the interfaces of the same
+         *  board
          *
          * @return false on error, true on success
          */
         bool resetBoard();
         /** Resets the CAN board. This must be called before
-	 *  any calls to reset() on any of the interfaces of the same
-	 *  board
+         *  any calls to reset() on any of the interfaces of the same
+         *  board
          *
          * @return false on error, true on success
          */
@@ -95,31 +97,33 @@ namespace canbus
         void write(Message const& msg);
 
         /** Returns the number of messages queued in the board's RX queue
-         */
+        */
         int getPendingMessagesCount();
 
-      /** Checks if bus reports error, this may indicate a disconnected cable
-       *  this method will only report an error after an message was written
-       *  to the bus
-       */
-      bool checkBusOk();
-      
+        /** Checks if bus reports error, this may indicate a disconnected cable
+         *  this method will only report an error after an message was written
+         *  to the bus
+         */
+        bool checkBusOk();
+
 
         /** Removes all pending messages from the RX queue
-         */
+        */
         void clear();
 
-	/** Returns the file descriptor associated with this object. If no file
-	 * descriptor is assigned, returns INVALID_FD
-	 */
-	int getFileDescriptor() const;
+        /** Returns the file descriptor associated with this object. If no file
+         * descriptor is assigned, returns INVALID_FD
+         */
+        int getFileDescriptor() const;
 
-	/** True if a valid file descriptor is assigned to this object */
-	bool isValid() const;
+        /** True if a valid file descriptor is assigned to this object */
+        bool isValid() const;
 
-	/** Closes the file descriptor */
-	void close();
-    
+        /** Closes the file descriptor */
+        void close();
+
+    private:
+        bool setBaudRate(int fd, int Rate);
     };
 }
 

@@ -1,5 +1,5 @@
-#include "canbus-hico.hh"
-#include "hico_api.h"
+#include <canbus/DriverHico.hpp>
+#include "vendor/hico_api.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

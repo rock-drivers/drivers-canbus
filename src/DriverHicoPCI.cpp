@@ -1,5 +1,5 @@
-#include "canbus-hico-pci.hh"
-
+#include <canbus/DriverHicoPCI.hpp>
+#include "vendor/hicocan.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -56,7 +56,7 @@ bool DriverHicoPCI::resetBoard()
 }
 bool DriverHicoPCI::resetBoard(int fd)
 {//done
-	SEND_IOCTL(IOC_RESET_BOARD);
+        SEND_IOCTL(IOC_RESET_BOARD);
   
     return true;
 }
@@ -83,11 +83,11 @@ bool DriverHicoPCI::setBaudRate(int fd, int Rate)
    canParam parameters;
    
    parameters.baud = Rate;
-   	
+        
    SEND_IOCTL_2(IOC_SET_BAUD, &parameters);
   
    return true;
-      	
+        
 }
 
 void DriverHicoPCI::setReadTimeout(uint32_t timeout)

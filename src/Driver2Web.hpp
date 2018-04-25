@@ -1,8 +1,9 @@
 #ifndef CANBUS_2WEB_HH
 #define CANBUS_2WEB_HH
-#include "canmessage.hh"
+
+#include <canbus/Message.hpp>
+#include <canbus/Driver.hpp>
 #include <iodrivers_base/Driver.hpp>
-#include "canbus.hh"
 #include <string>
 
 
@@ -33,8 +34,8 @@ namespace canbus
 
         uint32_t m_read_timeout;
         uint32_t m_write_timeout;
-	BAUD_RATE m_baudrate;
-	Status m_status;
+        BAUD_RATE m_baudrate;
+        Status m_status;
 
         int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
 
@@ -46,13 +47,13 @@ namespace canbus
         static const int DEFAULT_TIMEOUT = 100;
 
         Driver2Web();
-	
-	/** Opens the given device and resets the CAN interface. It returns
+        
+        /** Opens the given device and resets the CAN interface. It returns
          * true if the initialization was successful and false otherwise
          */
         bool open(std::string const& path);
-	
-	/** method does nothing, has to be implemented because its abstract in base class
+        
+        /** method does nothing, has to be implemented because its abstract in base class
          *
          * @return true 
          */
@@ -86,7 +87,7 @@ namespace canbus
          * for packets in read() or for write access in write()
          */
         uint32_t getReadTimeout() const;
-	
+        
         /** Sets the baudrate
          * */
         void setBaudrate(BAUD_RATE);
@@ -94,10 +95,10 @@ namespace canbus
         /** Sets the baudrate
          * */
         void setBaudrate(int);
-	
-	/** Gets the Controller Status
-	 * */
-	Status getStatus() const;
+        
+        /** Gets the Controller Status
+         * */
+        Status getStatus() const;
 
         /** Reads the next message. It is guaranteed to not block longer than the
          * timeout provided by setReadTimeout().
@@ -112,15 +113,15 @@ namespace canbus
          * The default timeout value is given by DEFAULT_TIMEOUT
          */
         void write(Message const& msg);
-	
-	/** Writes a ascii string. It is guaranteed to not block longer than the
+        
+        /** Writes a ascii string. It is guaranteed to not block longer than the
          * timeout provided in setWriteTimeout().
          *
          * The default timeout value is given by DEFAULT_TIMEOUT
          */
         void write(uint8_t *s);
-	
-	int getPendingMessagesCount();
+        
+        int getPendingMessagesCount();
 
         /** method does nothing, has to be implemented because its abstract in base class
          *
@@ -132,22 +133,22 @@ namespace canbus
         */
         void clear();
 
-	/** Returns the file descriptor associated with this object. If no file
-	 * descriptor is assigned, returns INVALID_FD
-	 */
+        /** Returns the file descriptor associated with this object. If no file
+         * descriptor is assigned, returns INVALID_FD
+         */
 
-	int getFileDescriptor() const;
+        int getFileDescriptor() const;
 
-	/** True if a valid file descriptor is assigned to this object */
-	bool isValid() const;
+        /** True if a valid file descriptor is assigned to this object */
+        bool isValid() const;
 
-	/** Closes the file descriptor */
-	void close();
+        /** Closes the file descriptor */
+        void close();
     
-	/** check status and print info
-	 *
-	 */
-	void statusCheck(const Status& status);
+        /** check status and print info
+         *
+         */
+        void statusCheck(const Status& status);
 
 
     };

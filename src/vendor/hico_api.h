@@ -82,20 +82,20 @@
 
 
 /**************************************************************************/
-#define IOC_SET_BITRATE	                       _IOW (IOC_MAGIC, 30, uint32_t)
+#define IOC_SET_BITRATE                        _IOW (IOC_MAGIC, 30, uint32_t)
 /**************************************************************************/
 /* Set the bitrate (aka. baudrate) for the given CAN nodes. Parameter is one
  * of the BITRATE_* macros below */
 
-#define BITRATE_10k	 0 
-#define BITRATE_20k	 1 
-#define BITRATE_50k	 2 
-#define BITRATE_100k	 3 
-#define BITRATE_125k	 4 
-#define BITRATE_250k	 5 
-#define BITRATE_500k	 6 
-#define BITRATE_800k	 7 
-#define BITRATE_1000k	 8 
+#define BITRATE_10k      0 
+#define BITRATE_20k      1 
+#define BITRATE_50k      2 
+#define BITRATE_100k     3 
+#define BITRATE_125k     4 
+#define BITRATE_250k     5 
+#define BITRATE_500k     6 
+#define BITRATE_800k     7 
+#define BITRATE_1000k    8 
 
 /**************************************************************************/
 #define IOC_SET_SJW_INCREMENT                  _IOW (IOC_MAGIC, 31, uint32_t)
@@ -108,7 +108,7 @@
  * to set this value */
 
 /**************************************************************************/
-#define IOC_GET_BITRATE	                       _IOR (IOC_MAGIC, 35, uint32_t)
+#define IOC_GET_BITRATE                        _IOR (IOC_MAGIC, 35, uint32_t)
 /**************************************************************************/
 /* Get the bitrate index number. The value corresponds one of the above
  * defined bitrates BITRATE_*k */
@@ -116,7 +116,7 @@
 
 
 /**************************************************************************/
-#define IOC_GET_CAN_STATUS	               _IOR (IOC_MAGIC, 40, uint32_t)
+#define IOC_GET_CAN_STATUS                     _IOR (IOC_MAGIC, 40, uint32_t)
 /**************************************************************************/
 /* Returns the current status flags of the CAN node. */
 
@@ -137,7 +137,7 @@
 
 
 /**************************************************************************/
-#define IOC_GET_BOARD_STATUS	               _IOR (IOC_MAGIC, 45, uint32_t)
+#define IOC_GET_BOARD_STATUS                   _IOR (IOC_MAGIC, 45, uint32_t)
 /**************************************************************************/
 /* Reads the current status of the board. In normal operation the value should
  * always be BS_RUNNING_OK. In case of an exception the values is something
@@ -146,48 +146,48 @@
 
 
 /**************************************************************************/
-#define IOC_SET_FILTER	              _IOW (IOC_MAGIC, 50, struct can_filter)
+#define IOC_SET_FILTER                _IOW (IOC_MAGIC, 50, struct can_filter)
 /**************************************************************************/
 /* Add an acceptance filter into the list of active acceptance filters. By
  * default, the acceptance masking is not active and all the messages are let
  * through */
 
 /**************************************************************************/
-#define IOC_CLEAR_FILTERS	                          _IO (IOC_MAGIC, 55)
+#define IOC_CLEAR_FILTERS                                 _IO (IOC_MAGIC, 55)
 /**************************************************************************/
 /* Clear all acceptance filters for the node and set the acceptance in default
  * state (all messages let through)*/
 
 
 /**************************************************************************/
-#define IOC_MSGS_IN_RXBUF	                    _IOR (IOC_MAGIC, 60, int)
+#define IOC_MSGS_IN_RXBUF                           _IOR (IOC_MAGIC, 60, int)
 /**************************************************************************/
 /* Return the number of messages that can be read from the boards receive
  * buffer */
 
 /**************************************************************************/
-#define IOC_MSGS_IN_TXBUF	                    _IOR (IOC_MAGIC, 61, int)
+#define IOC_MSGS_IN_TXBUF                           _IOR (IOC_MAGIC, 61, int)
 /**************************************************************************/
 /* Return the number of messages that are written to the CAN nodes transmit
  * buffer */
 
 /**************************************************************************/
-#define IOC_GET_TXBUF_SIZE	                    _IOR (IOC_MAGIC, 62, int)
+#define IOC_GET_TXBUF_SIZE                          _IOR (IOC_MAGIC, 62, int)
 /**************************************************************************/
 /* Size of transmit buffer */
 /**************************************************************************/
-#define IOC_GET_RXBUF_SIZE	                    _IOR (IOC_MAGIC, 63, int)
+#define IOC_GET_RXBUF_SIZE                          _IOR (IOC_MAGIC, 63, int)
 /**************************************************************************/
 /* Size of the receive buffer */
 
 /**************************************************************************/
-#define IOC_RESET_TIMESTAMP	                          _IO (IOC_MAGIC, 65)
+#define IOC_RESET_TIMESTAMP                               _IO (IOC_MAGIC, 65)
 /**************************************************************************/
 /* Reset the CAN message timestamp timer. Note that this command affects both
  * of the nodes.*/
 
 /**************************************************************************/
-#define IOC_GET_HW_ID	                      _IOR (IOC_MAGIC, 70, uint32_t)
+#define IOC_GET_HW_ID                         _IOR (IOC_MAGIC, 70, uint32_t)
 /**************************************************************************/
 /* read the boards hardware ID. The function returns one of the following
  * values */
@@ -199,18 +199,18 @@
 #define HW_HICOCAN_UNKNOWN 0xff
 
 /**************************************************************************/
-#define IOC_GET_FW2_VERSION	             _IOR (IOC_MAGIC, 71, uint32_t)
+#define IOC_GET_FW2_VERSION                  _IOR (IOC_MAGIC, 71, uint32_t)
 /**************************************************************************/
 /* Read version number for the board firmware (FW1 is the internal
  * bootloader and FW2 ist the actual firmware) */
 
 /**************************************************************************/
-#define IOC_GET_DRIVER_VERSION	             _IOR (IOC_MAGIC, 72, uint32_t)
+#define IOC_GET_DRIVER_VERSION               _IOR (IOC_MAGIC, 72, uint32_t)
 /**************************************************************************/
 /* Get version number of the driver */
 
 /**************************************************************************/
-#define IOC_GET_CAN_TYPE	             _IOR (IOC_MAGIC, 73, uint32_t)
+#define IOC_GET_CAN_TYPE                     _IOR (IOC_MAGIC, 73, uint32_t)
 /**************************************************************************/
 /* Get CAN node type node_type gives information of the physical CAN
  * interface */
@@ -219,14 +219,14 @@
 #define CAN_TYPE_FT 2          /* Fault Tolerant tranceiver */
 
 /**************************************************************************/
-#define IOC_GET_PCI104_POS	             _IOR (IOC_MAGIC, 75, uint32_t)
+#define IOC_GET_PCI104_POS                   _IOR (IOC_MAGIC, 75, uint32_t)
 /**************************************************************************/
 /* PCI-104 boards are identified with a jumpered value, which define their
  * location in the PCI-104 stack. This function returns a value from 0 to 3.
  * NOTE: this function doesn't have any meaning but for the PCI-104 boards */
     
 /**************************************************************************/
-#define IOC_GET_IOPIN_STATUS	               _IOR (IOC_MAGIC, 80, uint32_t)
+#define IOC_GET_IOPIN_STATUS                   _IOR (IOC_MAGIC, 80, uint32_t)
 /**************************************************************************/
 /* Get the status of the can nodes IOPIN. On Fault Tolerant (FT) boards, this
  * is the BusError signal (low active -> '1' means no error). This values is
@@ -234,13 +234,13 @@
 
 #ifndef __QNX__
 /**************************************************************************/
-#define IOC_GET_ERR_STAT	       _IOR (IOC_MAGIC, 81, struct err_stat)
+#define IOC_GET_ERR_STAT               _IOR (IOC_MAGIC, 81, struct err_stat)
 /**************************************************************************/
 struct err_stat{
     uint32_t values[0x3f];
 };
 /**************************************************************************/
-#define IOC_CLEAR_ERR_STAT	                         _IO (IOC_MAGIC, 82)
+#define IOC_CLEAR_ERR_STAT                               _IO (IOC_MAGIC, 82)
 /**************************************************************************/
 #endif
 
@@ -253,7 +253,7 @@ struct err_stat{
  * has no use in normal CAN usage, and the board needs to be reset after
  * putting it into the "blink leds" mode */
 /**************************************************************************/
-#define IOC_GET_LPCBC_REV	             _IOR (IOC_MAGIC, 102, uint32_t)
+#define IOC_GET_LPCBC_REV                    _IOR (IOC_MAGIC, 102, uint32_t)
 /**************************************************************************/
 /* This returns the onboard processors bootloader FW revsision number.*/
 
@@ -273,28 +273,28 @@ struct err_stat{
  * have a meaning when sending (e.g. timestamp) */
 struct can_msg {
     union{
-	uint16_t fi;
-	struct {
-	    /* Data length 0 to 8 */
-	    uint16_t dlc:4;
+        uint16_t fi;
+        struct {
+            /* Data length 0 to 8 */
+            uint16_t dlc:4;
 
-	    /* remote transmission request flag */
-	    uint16_t rtr:1;
+            /* remote transmission request flag */
+            uint16_t rtr:1;
 
-	    /* Frame format flag 0=normal, 1=extended */ 
-	    uint16_t ff:1;
+            /* Frame format flag 0=normal, 1=extended */ 
+            uint16_t ff:1;
 
-	    /* Data overrun status flag */
-	    uint16_t dos:1;
+            /* Data overrun status flag */
+            uint16_t dos:1;
 
-	    /* io pin status or can error signal on fault tolerant can */
-	    uint16_t iopin:1;
+            /* io pin status or can error signal on fault tolerant can */
+            uint16_t iopin:1;
 
-	    /* CAN node number which received the message */
-	    uint16_t node:2;
+            /* CAN node number which received the message */
+            uint16_t node:2;
 
-	    uint16_t reserved:6;
-	}PACKED;
+            uint16_t reserved:6;
+        }PACKED;
     }PACKED;
 
     /* Timestamp in microseconds */
@@ -313,12 +313,12 @@ struct can_msg {
 struct can_filter{
     int type;
     union{
-	uint32_t mask;
-	uint32_t upper;
+        uint32_t mask;
+        uint32_t upper;
     };
     union{
-	uint32_t code;
-	uint32_t lower;
+        uint32_t code;
+        uint32_t lower;
     };
 };
 #define FTYPE_AMASK 1

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "canbus.hh"
+#include <canbus/Driver.hpp>
 #include <iomanip>
 #include <map>
 #include <boost/lexical_cast.hpp>
@@ -27,8 +27,8 @@ int main(int argc, char** argv)
     id = strtol(argv[3], NULL, 16);
     if(id < 0 || id > (1<<11))
     {
-	std::cerr << std::endl << "ID must between 0 and 2^11" << std::endl;
-	return 1;
+        std::cerr << std::endl << "ID must between 0 and 2^11" << std::endl;
+        return 1;
     }
 
 
@@ -38,14 +38,14 @@ int main(int argc, char** argv)
 
     if(lenght < 0 || lenght > 8)
     {
-	std::cerr << std::endl << "Lenght must between 0 and 8" << std::endl;
-	return 1;
+        std::cerr << std::endl << "Lenght must between 0 and 8" << std::endl;
+        return 1;
     }
     
     if(argc != lenght + 5)
     {
-	std::cerr << std::endl << "Error, number of parameters does not match length" << std::endl;
-	return 1;
+        std::cerr << std::endl << "Error, number of parameters does not match length" << std::endl;
+        return 1;
     }
 
     canbus::Message msg;
@@ -54,14 +54,14 @@ int main(int argc, char** argv)
     int tmp;
     for(int i = 0; i < lenght; i++) 
     {
-	tmp = strtol(argv[5 + i], NULL, 16);
-	if(tmp < 0 || tmp > 255)
-	{
-	    std::cerr << "Error, given value nr " << i << " is wrong : " << tmp << std::endl;
-	    return 1;
-	}
-	msg.data[i] = tmp;
-	std::cout << " 0x" << tmp; 
+        tmp = strtol(argv[5 + i], NULL, 16);
+        if(tmp < 0 || tmp > 255)
+        {
+            std::cerr << "Error, given value nr " << i << " is wrong : " << tmp << std::endl;
+            return 1;
+        }
+        msg.data[i] = tmp;
+        std::cout << " 0x" << tmp; 
     }
     std::cout << std::endl;
 

@@ -1,7 +1,5 @@
-#include "canbus-vscan.hh"
-#include "vs_can_api.h"
-
-#include <iodrivers_base.hh>
+#include <canbus/DriverVsCan.hpp>
+#include "vendor/vs_can_api.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -72,7 +70,7 @@ bool DriverVsCan::open(std::string const& path)
     return true;
 }
 
-bool DriverVsCan::checkForMessages(Timeout& timeout)
+bool DriverVsCan::checkForMessages(iodrivers_base::Timeout& timeout)
 {
 #define BUFFER_SIZE 100
     VSCAN_MSG buffer[BUFFER_SIZE];
@@ -87,7 +85,7 @@ bool DriverVsCan::checkForMessages(Timeout& timeout)
             return false;
 
         if((ret = VSCAN_Read(handle, buffer, BUFFER_SIZE, &read_cnt) != VSCAN_ERR_OK))
-            throw unix_error("read(): error in reading can messages");
+            throw iodrivers_base::UnixError("read(): error in reading can messages");
 
         for(unsigned int i = 0; i < read_cnt; i++)
         {        
@@ -112,10 +110,11 @@ bool DriverVsCan::checkForMessages(Timeout& timeout)
 
 Message DriverVsCan::read()
 {
-    Timeout timeout(m_read_timeout);
+    iodrivers_base::Timeout timeout(m_read_timeout);
 
     if(!checkForMessages(timeout))
-        throw timeout_error(timeout_error::PACKET, "read(): timeout");
+        throw iodrivers_base::TimeoutError(
+                iodrivers_base::TimeoutError::PACKET, "read(): timeout");
     
     Message msg = rx_queue.front();
     rx_queue.pop_front();
@@ -132,12 +131,12 @@ void DriverVsCan::write(Message const& msg)
     memcpy(out.Data, msg.data, 8);
     out.Size   = msg.size;
     if(VSCAN_Write(handle, &out, 1, &out_cnt) != VSCAN_ERR_OK)
-        throw unix_error("write(): error during write");
+        throw iodrivers_base::UnixError("write(): error during write");
 }
 
 int DriverVsCan::getPendingMessagesCount()
 {
-    Timeout t(0);
+    iodrivers_base::Timeout t(0);
     checkForMessages(t);
     return rx_queue.size();
 }
@@ -162,7 +161,7 @@ void DriverVsCan::clear()
 
 int DriverVsCan::getFileDescriptor() const
 {
-    return IODriver::INVALID_FD;
+    return iodrivers_base::Driver::INVALID_FD;
 }
 
 bool DriverVsCan::isValid() const
@@ -173,6 +172,6 @@ bool DriverVsCan::isValid() const
 /** Closes the file descriptor */
 void DriverVsCan::close()
 {
-    VSCAN_STATUS status = VSCAN_Close(handle);
+    VSCAN_Close(handle);
 }
 
