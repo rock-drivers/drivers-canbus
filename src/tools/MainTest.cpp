@@ -1,5 +1,5 @@
 #include <iostream>
-#include "canbus.hh"
+#include <canbus/Driver.hpp>
 #include <iomanip>
 #include <map>
 #include <boost/lexical_cast.hpp>
