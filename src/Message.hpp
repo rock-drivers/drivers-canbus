@@ -21,7 +21,8 @@ namespace canbus
         HICO_PCI,
         VS_CAN,
         CAN2WEB,
-        NET_GATEWAY
+        NET_GATEWAY,
+        EASY_SYNC
     };
     
     struct Message

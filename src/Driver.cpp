@@ -2,16 +2,15 @@
 #include <canbus/DriverHico.hpp>
 #include <canbus/DriverHicoPCI.hpp>
 #include <canbus/Driver2Web.hpp>
-
-#ifdef HAVE_CAN_H
+#include <canbus/DriverEasySYNC.hpp>
 #include <canbus/DriverSocket.hpp>
-#endif
-
 #include <canbus/DriverNetGateway.hpp>
+#include <base-logging/Logging.hpp>
 
 #include <stdio.h>
 #include <algorithm>
 #include <string>
+#include <memory>
 
 using namespace canbus;
 
@@ -21,66 +20,45 @@ Driver::~Driver()
 
 Driver *canbus::openCanDevice(std::string const& path, DRIVER_TYPE dType)
 {
-   
-  Driver *d;
-  switch(dType)
-   {
-    case HICO: 
-                d = new DriverHico();
-                if (d->open(path)) {
-                        fprintf(stderr,"opened can bus with hico driver\n");
-                        return d;
-                }
-                else
-                        fprintf(stderr,"no hico-can card found... could not open HicoCan device\n");
-                delete d;                
-                break;
+    std::auto_ptr<Driver> driver;
+    switch(dType)
+    {
+        case HICO: 
+            driver.reset(new DriverHico());
+            break;
 
-    case HICO_PCI:
-                d = new DriverHicoPCI();
-                if (d->open(path)) {
-                        fprintf(stderr,"opened can bus with hico pci driver\n");
-                        return d;
-                }
-                else
-                        fprintf(stderr,"no hico-can PCI card found... could not open HicoCan PCI device\n");
-    
-                delete d;
-                break;
-    case SOCKET:
-                //#ifdef HAVE_CAN_H
-                d = new DriverSocket();
-                if (d->open(path)) {
-                        fprintf(stderr,"opened can bus with socket driver\n");
-                        return d;
-                }
-                else
-                        fprintf(stderr,"no socket can driver found... could not open socket CAN device!\n");
-                delete d;
-                break;          
-                //#endif
-    case CAN2WEB:
-                d = new Driver2Web();
-                if (d->open(path)) {
-                        fprintf(stderr,"opened can bus with can2web driver\n");
-                        return d;
-                }
-                else
-                        fprintf(stderr,"no can2web driver found... could not open can2web CAN device!\n");
-                delete d;
-                break;          
-    case NET_GATEWAY:
-        d = new DriverNetGateway();
-            if (d->open(path)) {
-                fprintf(stderr,"opened can bus with network gateway driver\n");
-                return d;
-            } else
-                fprintf(stderr,"failed connect to network gateway driver... could not open remote network CAN device!\n");
-            delete d;
-        break;
-  default : return NULL; 
-  }
-  return NULL;
+        case HICO_PCI:
+            driver.reset(new DriverHicoPCI());
+            break;
+
+        case SOCKET:
+            driver.reset(new DriverSocket());
+            break;          
+
+        case CAN2WEB:
+            driver.reset(new Driver2Web());
+            break;          
+
+        case NET_GATEWAY:
+            driver.reset(new DriverNetGateway());
+            break;
+
+        case EASY_SYNC:
+            driver.reset(new DriverEasySYNC());
+            break;
+
+        default:
+            return NULL; 
+    }
+
+    if (driver->open(path)) {
+        LOG_INFO("opened CAN device %s", path.c_str());
+        return driver.release();
+    }
+    else
+        LOG_WARN("failed to open CAN device %s", path.c_str());
+
+    return NULL;
 }
 
 Driver *canbus::openCanDevice(std::string const& path, std::string const& type_upper)
@@ -106,6 +84,10 @@ Driver *canbus::openCanDevice(std::string const& path, std::string const& type_u
 
     if (type == std::string("net_gateway")) {
         return openCanDevice(path, NET_GATEWAY);
+    }
+
+    if (type == std::string("easy_sync")) {
+        return openCanDevice(path, EASY_SYNC);
     }
 
     return NULL;
