@@ -1,6 +1,5 @@
 #include "test_Helpers.hpp"
 #include <canbus/DriverEasySYNC.hpp>
-#include <imu_advanced_navigation_anpp/Protocol.hpp>
 
 using namespace std;
 using namespace canbus;
