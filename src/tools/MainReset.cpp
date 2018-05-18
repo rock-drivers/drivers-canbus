@@ -9,7 +9,7 @@ int main(int argc, char** argv)
         std::cerr << "canbus_reset can_device device_type" << std::endl;
         return 1;
     }
-    std::auto_ptr<canbus::Driver> driver(
+    std::unique_ptr<canbus::Driver> driver(
             canbus::openCanDevice(std::string(argv[1]), std::string(argv[2])));
     
     if(!driver.get())

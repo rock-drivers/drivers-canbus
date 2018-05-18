@@ -20,7 +20,7 @@ Driver::~Driver()
 
 Driver *canbus::openCanDevice(std::string const& path, DRIVER_TYPE dType)
 {
-    std::auto_ptr<Driver> driver;
+    std::unique_ptr<Driver> driver;
     switch(dType)
     {
         case HICO: 
