@@ -149,7 +149,7 @@ Message DriverEasySYNC::read()
         buffer[0] = '0'; // round at the nibble ...
         cursor = parseBytes(raw_can_id + 2, buffer, 2);
     }
-    message.can_id = 
+    message.can_id =
         static_cast<int>(raw_can_id[0]) << 24 |
         static_cast<int>(raw_can_id[1]) << 16 |
         static_cast<int>(raw_can_id[2]) << 8 |
@@ -165,7 +165,7 @@ Message DriverEasySYNC::read()
     if (cursor != buffer + size)
         throw std::runtime_error("size mismatch while parsing a received frame");
 
-    uint32_t can_time = 
+    uint32_t can_time =
         static_cast<int>(raw_can_time[0]) << 8 |
         static_cast<int>(raw_can_time[1]) << 0;
     message.can_time = base::Time::fromMilliseconds(can_time);
@@ -362,7 +362,7 @@ int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) cons
             return r;
         if (bufferSize < 5)
             return 0;
-    
+
         // remaining N bytes per packet and 4 for timestamp
         int remainingLength = (buffer[4] - '0') * 2 + 4;
         size_t expectedLength = remainingLength + 5;

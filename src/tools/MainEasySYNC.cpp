@@ -68,7 +68,7 @@ int main(int argc, char**argv)
             std::cerr << std::endl << "length must between 0 and 8" << std::endl;
             return 1;
         }
-        
+
         int count = 1;
         int period = 0;
         if(argc >= length + 6)
@@ -92,7 +92,7 @@ int main(int argc, char**argv)
         msg.can_id = id;
         msg.size = length;
         int tmp;
-        for(int i = 0; i < length; i++) 
+        for(int i = 0; i < length; i++)
         {
             tmp = strtol(argv[5 + i], NULL, 16);
             if(tmp < 0 || tmp > 255)
@@ -101,7 +101,7 @@ int main(int argc, char**argv)
                 return 1;
             }
             msg.data[i] = tmp;
-            std::cout << " 0x" << tmp; 
+            std::cout << " 0x" << tmp;
         }
         std::cout << std::endl;
         std::cout << "sending " << std::dec << count << " packets at a period of " << period << "ms" << std::endl;
@@ -120,5 +120,3 @@ int main(int argc, char**argv)
 
     return 0;
 }
-
-

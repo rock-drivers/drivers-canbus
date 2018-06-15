@@ -41,11 +41,11 @@ namespace canbus
         DriverEasySYNC();
 
         /** Opens the device
-         * 
+         *
          * Append a CAN rate after a colon to configure the bus to this rate.
          * The rate must be one of 10k, 20k, 50k, 100k, 125k, 250k, 500k, 800k,
          * 1M.
-         * 
+         *
          * For instance, serial:///dev/ttyUSB0:115200:10k will open the device
          * on /dev/ttyUSB0 with a serial baud rate of 115200, using 10k CAN
          * rate.
@@ -68,7 +68,7 @@ namespace canbus
          * for packets in read() or for write access in write()
          */
         virtual uint32_t getReadTimeout() const;
-        
+
         /** Resets the chip */
         virtual bool resetBoard();
 
