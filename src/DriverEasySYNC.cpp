@@ -118,6 +118,20 @@ uint8_t const* parseBytes(uint8_t* output, uint8_t const* input, int byte_size)
     return input + byte_size * 2;
 }
 
+template<typename T>
+static void commandWithRetries(T lambda, int retries, int timeout) {
+    base::Time deadline = base::Time::now() + base::Time::fromMilliseconds(timeout);
+    while(true) {
+        try {
+            lambda((deadline - base::Time::now()).toMilliseconds());
+            break;
+        } catch (canbus::DriverEasySYNC::FailedCommand) {
+            if (--retries <= 0)
+                throw;
+        }
+    }
+}
+
 Message DriverEasySYNC::read()
 {
     uint8_t buffer[MAX_PACKET_SIZE];
@@ -202,8 +216,10 @@ void DriverEasySYNC::write(Message const& msg)
 
     int bufferSize = cursor - buffer + 1;
     uint8_t replyBuffer[MAX_PACKET_SIZE];
-    writePacket(buffer, bufferSize);
-    readReply('t', replyBuffer);
+    commandWithRetries([this, buffer, bufferSize, &replyBuffer](int timeout) {
+        writePacket(buffer, bufferSize);
+        readReply('t', replyBuffer, timeout);
+    }, 10, getReadTimeout());
 }
 
 int DriverEasySYNC::getFileDescriptor() const
@@ -225,8 +241,10 @@ void DriverEasySYNC::close()
 DriverEasySYNC::Status DriverEasySYNC::getStatus()
 {
     uint8_t buffer[MAX_PACKET_SIZE];
-    writeCommand("F\r", 2);
-    readReply('F', buffer);
+    commandWithRetries([this, &buffer](int timeout) {
+        writeCommand("F\r", 2);
+        readReply('F', buffer, timeout);
+    }, 10, getReadTimeout());
 
     uint8_t raw_status;
     parseBytes(&raw_status, buffer, 2);
@@ -275,10 +293,11 @@ void DriverEasySYNC::clear()
 
 void DriverEasySYNC::processSimpleCommand(char const* cmd, int commandSize)
 {
-    writeCommand(cmd, commandSize);
-
     uint8_t buffer[MAX_PACKET_SIZE];
-    readReply(cmd[0], buffer);
+    commandWithRetries([this, cmd, commandSize, &buffer](int timeout) {
+        writeCommand(cmd, commandSize);
+        readReply(cmd[0], buffer);
+    }, 10, getReadTimeout());
 }
 
 void DriverEasySYNC::processSimpleCommand(uint8_t const* cmd, int commandSize)
@@ -304,10 +323,14 @@ int DriverEasySYNC::readReply(char command, uint8_t* buffer)
 int DriverEasySYNC::readReply(char command, uint8_t* buffer, int timeout)
 {
     mCurrentCommand = command;
-    int size = readPacket(buffer, MAX_PACKET_SIZE, timeout);
-    if (buffer[0] == '\x7')
-        throw FailedCommand(string(&command, 1) + " command failed");
-    return size;
+    base::Time deadline = base::Time::now() + base::Time::fromMilliseconds(timeout);
+    while(true) {
+        int size = readPacket(buffer, MAX_PACKET_SIZE, (deadline - base::Time::now()).toMilliseconds());
+        if (buffer[0] == '\x7')
+            throw FailedCommand(string(&command, 1) + " command failed");
+        else if (buffer[0] != 't' && buffer[0] != 'T')
+            return size;
+    }
 }
 
 static bool isNibble(char c)
