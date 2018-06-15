@@ -65,7 +65,6 @@ bool DriverEasySYNC::open(string const& path)
         processSimpleCommand(rate_cmd, 3);
     processSimpleCommand("O\r", 2);
     processSimpleCommand("E\r", 2);
-    mPendingWriteReplies = 0;
     return true;
 }
 
@@ -97,7 +96,6 @@ bool DriverEasySYNC::resetBoard()
 
 bool DriverEasySYNC::reset()
 {
-    mPendingWriteReplies = 0;
     return true;
 }
 
@@ -180,12 +178,6 @@ uint8_t* dumpBytes(uint8_t* output, uint8_t const* input, int byte_size)
 
 void DriverEasySYNC::write(Message const& msg)
 {
-    asyncWrite(msg);
-    readWriteReply(getReadTimeout());
-}
-
-void DriverEasySYNC::asyncWrite(Message const& msg)
-{
     uint8_t raw_can_id[4];
     raw_can_id[0] = (msg.can_id >> 24) & 0xFF;
     raw_can_id[1] = (msg.can_id >> 16) & 0xFF;
@@ -207,31 +199,11 @@ void DriverEasySYNC::asyncWrite(Message const& msg)
     *cursor = msg.size + '0';
     cursor = dumpBytes(cursor + 1, msg.data, msg.size);
     *cursor = '\r';
-    writePacket(buffer, cursor - buffer + 1);
-    mPendingWriteReplies++;
-}
 
-int DriverEasySYNC::readWriteReply(int timeout)
-{
-    if (mPendingWriteReplies == 0)
-        throw std::runtime_error("not expecting a write reply");
-
-    uint8_t buffer[MAX_PACKET_SIZE];
-    readReply('t', buffer, timeout);
-    return mPendingWriteReplies;
-}
-
-void DriverEasySYNC::readAllWriteReplies(int timeout)
-{
-    while (mPendingWriteReplies)
-    {
-        readWriteReply(timeout);
-    }
-}
-
-int DriverEasySYNC::getPendingWriteReplies() const
-{
-    return mPendingWriteReplies;
+    int bufferSize = cursor - buffer + 1;
+    uint8_t replyBuffer[MAX_PACKET_SIZE];
+    writePacket(buffer, bufferSize);
+    readReply('t', replyBuffer);
 }
 
 int DriverEasySYNC::getFileDescriptor() const

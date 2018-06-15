@@ -108,24 +108,7 @@ int main(int argc, char**argv)
 
         for (int i = 0; i < count; ++i)
         {
-            driver->asyncWrite(msg);
-            usleep(period * 1000);
-
-            try {
-                int count = driver->getPendingWriteReplies();
-                for (int i = 1; i < count; ++i)
-                {
-                    driver->readWriteReply(0); 
-                }
-            }
-            catch(iodrivers_base::TimeoutError) {
-            }
-        }
-        try {
-            driver->readAllWriteReplies(1000);
-        }
-        catch(iodrivers_base::TimeoutError) {
-            driver->clear();
+            driver->write(msg);
         }
     }
     else if (command == "reset")
