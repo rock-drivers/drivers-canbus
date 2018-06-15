@@ -59,10 +59,12 @@ bool DriverEasySYNC::open(string const& path)
     // Force-close. Will fail if the device is already closed
     try { processSimpleCommand("C\r", 2); }
     catch(FailedCommand) { }
+    processSimpleCommand("E\r", 2);
     processSimpleCommand("Z1\r", 3);
     if (rate_cmd)
         processSimpleCommand(rate_cmd, 3);
     processSimpleCommand("O\r", 2);
+    processSimpleCommand("E\r", 2);
     mPendingWriteReplies = 0;
     return true;
 }
