@@ -21,8 +21,11 @@ BAUD_RATE_ARGUMENTS baud_rates[] = {
     { "", 0 }
 };
 
-DriverEasySYNC::DriverEasySYNC()
-    : iodrivers_base::Driver(MAX_PACKET_SIZE) {}
+DriverEasySYNC::DriverEasySYNC(int queue_size)
+    : iodrivers_base::Driver(MAX_PACKET_SIZE)
+{
+    mQueue.reserve(queue_size);
+}
 
 bool DriverEasySYNC::open(string const& path)
 {
@@ -48,6 +51,7 @@ bool DriverEasySYNC::open(string const& path)
     setWriteTimeout(100);
 
     openURI(uri);
+    mQueue.clear();
     if (path.substr(0, 6) == "serial")
     {
         struct serial_struct ss;
@@ -91,11 +95,13 @@ uint32_t DriverEasySYNC::getReadTimeout() const
 bool DriverEasySYNC::resetBoard()
 {
     processSimpleCommand("R\r", 2);
+    mQueue.clear();
     return true;
 }
 
 bool DriverEasySYNC::reset()
 {
+    mQueue.clear();
     return true;
 }
 
@@ -132,10 +138,34 @@ static void commandWithRetries(T lambda, int retries, int timeout) {
     }
 }
 
+int DriverEasySYNC::getPendingMessagesCount()
+{
+    try {
+        while(mQueue.size() < mQueue.capacity())
+        {
+            auto msg = read(0);
+            mQueue.insert(mQueue.begin(), msg);
+        }
+    }
+    catch(iodrivers_base::TimeoutError) {}
+    return mQueue.size();
+}
+
 Message DriverEasySYNC::read()
 {
+    return read(getReadTimeout());
+}
+
+Message DriverEasySYNC::read(int timeout_ms)
+{
+    if (!mQueue.empty()) {
+        canbus::Message msg = mQueue.back();
+        mQueue.pop_back();
+        return msg;
+    }
+
     uint8_t buffer[MAX_PACKET_SIZE];
-    int size = readPacket(buffer, MAX_PACKET_SIZE);
+    int size = readPacket(buffer, MAX_PACKET_SIZE, timeout_ms);
     canbus::Message message;
     message.time = base::Time::now();
 
