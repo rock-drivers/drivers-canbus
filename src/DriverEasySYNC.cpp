@@ -3,6 +3,7 @@
 #include <base/Time.hpp>
 #include <linux/serial.h>
 #include <sys/ioctl.h>
+#include <iostream>
 
 using namespace canbus;
 using namespace std;
@@ -143,7 +144,7 @@ int DriverEasySYNC::getPendingMessagesCount()
     try {
         while(mQueue.size() < mQueue.capacity())
         {
-            auto msg = read(0);
+            auto msg = readFromIO(0);
             mQueue.insert(mQueue.begin(), msg);
         }
     }
@@ -163,9 +164,15 @@ Message DriverEasySYNC::read(int timeout_ms)
         mQueue.pop_back();
         return msg;
     }
+    return readFromIO(timeout_ms);
+}
 
+
+Message DriverEasySYNC::readFromIO(int timeout_ms)
+{
     uint8_t buffer[MAX_PACKET_SIZE];
     int size = readPacket(buffer, MAX_PACKET_SIZE, timeout_ms);
+    std::cout << "RECV " << size << " \"" << string((char const*)buffer, size) << "\"" << std::endl;
     canbus::Message message;
     message.time = base::Time::now();
 
@@ -189,16 +196,21 @@ Message DriverEasySYNC::read(int timeout_ms)
     message.size = length;
 
     cursor = parseBytes(message.data, cursor + 1, length);
-    uint8_t raw_can_time[2] = { 0, 0 };
-    cursor = parseBytes(raw_can_time, cursor, 2);
+    if (cursor + 4 == buffer + size)
+    {
+	    uint8_t raw_can_time[2] = { 0, 0 };
+	    cursor = parseBytes(raw_can_time, cursor, 2);
 
-    if (cursor != buffer + size)
-        throw std::runtime_error("size mismatch while parsing a received frame");
+	    if (cursor != buffer + size)
+		throw std::runtime_error("size mismatch while parsing a received frame");
 
-    uint32_t can_time =
-        static_cast<int>(raw_can_time[0]) << 8 |
-        static_cast<int>(raw_can_time[1]) << 0;
-    message.can_time = base::Time::fromMilliseconds(can_time);
+	    uint32_t can_time =
+		static_cast<int>(raw_can_time[0]) << 8 |
+		static_cast<int>(raw_can_time[1]) << 0;
+	    message.can_time = base::Time::fromMilliseconds(can_time);
+    }
+    else if (cursor != buffer + size)
+throw std::runtime_error("size mismatch while parsing a received frame");
     return message;
 }
 
@@ -245,6 +257,7 @@ void DriverEasySYNC::write(Message const& msg)
     *cursor = '\r';
 
     int bufferSize = cursor - buffer + 1;
+    std::cout << "SEND " << bufferSize << " " << string((char*)buffer, bufferSize) << std::endl;
     uint8_t replyBuffer[MAX_PACKET_SIZE];
     commandWithRetries([this, buffer, bufferSize, &replyBuffer](int timeout) {
         writePacket(buffer, bufferSize);
@@ -356,6 +369,7 @@ int DriverEasySYNC::readReply(char command, uint8_t* buffer, int timeout)
     base::Time deadline = base::Time::now() + base::Time::fromMilliseconds(timeout);
     while(true) {
         int size = readPacket(buffer, MAX_PACKET_SIZE, (deadline - base::Time::now()).toMilliseconds());
+    	std::cout << "RECV " << size << " \"" << string((char const*)buffer, size) << "\"" << std::endl;
         if (buffer[0] == '\x7')
             throw FailedCommand(string(&command, 1) + " command failed");
         else if (buffer[0] != 't' && buffer[0] != 'T')
@@ -394,7 +408,7 @@ int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) cons
             return 0;
 
         // remaining N bytes per packet and 4 for timestamp
-        int remainingLength = (buffer[4] - '0') * 2 + 4;
+        int remainingLength = (buffer[4] - '0') * 2;
         size_t expectedLength = remainingLength + 5;
         r = checkNibbleSequence(buffer, bufferSize, 5, remainingLength);
         if (r)
@@ -402,7 +416,10 @@ int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) cons
         else if (bufferSize < expectedLength)
             return 0;
         else
+	{
+	    std::cout << "  got packet size=" << expectedLength << std::endl;
             return expectedLength;
+	}
     }
 
     switch(mCurrentCommand)
@@ -476,6 +493,8 @@ int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) cons
                 return -2;
             else
                 return 2;
+	default:
+	    return -1;
     }
     throw std::runtime_error("intenral error: unknown command in extractPacket");
 }

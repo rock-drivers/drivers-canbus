@@ -125,6 +125,7 @@ namespace canbus
         int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
 
         std::vector<canbus::Message> mQueue;
+        Message readFromIO(int timeout_ms);
     };
 }
 
