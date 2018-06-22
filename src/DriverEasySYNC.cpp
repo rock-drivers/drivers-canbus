@@ -323,9 +323,9 @@ DriverEasySYNC::Status DriverEasySYNC::getStatus()
 
 bool DriverEasySYNC::checkBusOk()
 {
-    Status status = getStatus();
-    return status.rx_state == OK &&
-        status.tx_state == OK;
+    // getStatus() expects the board's communication channel to be closed. This
+    // is very disruptive. I elected to avoid doing it here.
+    return true;
 }
 
 void DriverEasySYNC::clear()
