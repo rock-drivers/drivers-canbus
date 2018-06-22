@@ -13,6 +13,7 @@ namespace canbus
     {
     public:
         static const int MAX_PACKET_SIZE = 1024;
+        static const int DEFAULT_QUEUE_SIZE = 20;
 
     public:
         struct FailedCommand : std::runtime_error {
@@ -38,7 +39,7 @@ namespace canbus
             bool rx_buffer1_overflow;
         };
 
-        DriverEasySYNC();
+        DriverEasySYNC(int queue_size = DEFAULT_QUEUE_SIZE);
 
         /** Opens the device
          *
@@ -80,6 +81,8 @@ namespace canbus
 
         virtual Message read();
 
+        Message read(int timeout_ms);
+
         virtual void write(Message const& msg);
 
         int readWriteReply(int timeout = 0);
@@ -109,7 +112,7 @@ namespace canbus
 
         /** Returns the number of messages queued in the board's RX queue
          */
-        virtual int getPendingMessagesCount() { return 0; }
+        virtual int getPendingMessagesCount();
 
     private:
         char mCurrentCommand;
@@ -120,6 +123,9 @@ namespace canbus
         void processSimpleCommand(char const* cmd, int commandSize);
         void processSimpleCommand(uint8_t const* cmd, int commandSize);
         int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
+
+        std::vector<canbus::Message> mQueue;
+        Message readFromIO(int timeout_ms);
     };
 }
 
