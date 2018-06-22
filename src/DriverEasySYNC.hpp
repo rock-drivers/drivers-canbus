@@ -87,6 +87,24 @@ namespace canbus
 
         int readWriteReply(int timeout = 0);
 
+        /** Read the CAN timestamps from the board
+         *
+         * They are fairly unreliable in full-duplex situations, so they are
+         * disabled by default
+         *
+         * @see setUseBoardTimestamps
+         */
+        bool useBoardTimestamps() const;
+
+        /** Change whether the driver will attempt to use the board-reported timestamps
+         *
+         * They are fairly unreliable in full-duplex situations, so they are
+         * disabled by default
+         *
+         * @see useBoardTimestamps
+         */
+        void setUseBoardTimestamps(bool use);
+
         /** Removes all pending messages from the RX queue
          */
         virtual void clear();
@@ -116,6 +134,7 @@ namespace canbus
 
     private:
         char mCurrentCommand;
+        bool mUseBoardTimestamps = false;
         void writeCommand(char const* cmd, int commandSize);
         void writeCommand(uint8_t const* cmd, int commandSize);
         int readReply(char cmd, uint8_t* buffer);

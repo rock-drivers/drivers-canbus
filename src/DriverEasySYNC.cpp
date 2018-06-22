@@ -64,7 +64,10 @@ bool DriverEasySYNC::open(string const& path)
     try { processSimpleCommand("C\r", 2); }
     catch(FailedCommand) { }
     processSimpleCommand("E\r", 2);
-    processSimpleCommand("Z1\r", 3);
+    if (useBoardTimestamps())
+        processSimpleCommand("Z1\r", 3);
+    else
+        processSimpleCommand("Z0\r", 3);
     if (rate_cmd)
         processSimpleCommand(rate_cmd, 3);
     processSimpleCommand("O\r", 2);
@@ -194,16 +197,21 @@ Message DriverEasySYNC::readFromIO(int timeout_ms)
     message.size = length;
 
     cursor = parseBytes(message.data, cursor + 1, length);
-    uint8_t raw_can_time[2] = { 0, 0 };
-    cursor = parseBytes(raw_can_time, cursor, 2);
+    if (cursor + 4 == buffer + size)
+    {
+        uint8_t raw_can_time[2] = { 0, 0 };
+        cursor = parseBytes(raw_can_time, cursor, 2);
 
-    if (cursor != buffer + size)
+        if (cursor != buffer + size)
+            throw std::runtime_error("size mismatch while parsing a received frame");
+
+        uint32_t can_time =
+            static_cast<int>(raw_can_time[0]) << 8 |
+            static_cast<int>(raw_can_time[1]) << 0;
+	    message.can_time = base::Time::fromMilliseconds(can_time);
+    }
+    else if (cursor != buffer + size)
         throw std::runtime_error("size mismatch while parsing a received frame");
-
-    uint32_t can_time =
-        static_cast<int>(raw_can_time[0]) << 8 |
-        static_cast<int>(raw_can_time[1]) << 0;
-    message.can_time = base::Time::fromMilliseconds(can_time);
     return message;
 }
 
@@ -383,6 +391,16 @@ static int checkNibbleSequence(uint8_t const* buffer, int bufferSize, int offset
     return 0;
 }
 
+void DriverEasySYNC::setUseBoardTimestamps(bool use)
+{
+    mUseBoardTimestamps = use;
+}
+
+bool DriverEasySYNC::useBoardTimestamps() const
+{
+    return mUseBoardTimestamps;
+}
+
 int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) const
 {
     if (bufferSize == 0)
@@ -399,7 +417,9 @@ int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) cons
             return 0;
 
         // remaining N bytes per packet and 4 for timestamp
-        int remainingLength = (buffer[4] - '0') * 2 + 4;
+        int remainingLength = (buffer[4] - '0') * 2;
+        if (useBoardTimestamps())
+            remainingLength += 4;
         size_t expectedLength = remainingLength + 5;
         r = checkNibbleSequence(buffer, bufferSize, 5, remainingLength);
         if (r)
@@ -481,6 +501,8 @@ int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) cons
                 return -2;
             else
                 return 2;
+        default:
+            return -1;
     }
     throw std::runtime_error("intenral error: unknown command in extractPacket");
 }
