@@ -13,6 +13,7 @@ namespace canbus
     {
     public:
         static const int MAX_PACKET_SIZE = 1024;
+        static const int DEFAULT_QUEUE_SIZE = 20;
 
     public:
         struct FailedCommand : std::runtime_error {
@@ -38,14 +39,14 @@ namespace canbus
             bool rx_buffer1_overflow;
         };
 
-        DriverEasySYNC();
+        DriverEasySYNC(int queue_size = DEFAULT_QUEUE_SIZE);
 
         /** Opens the device
-         * 
+         *
          * Append a CAN rate after a colon to configure the bus to this rate.
          * The rate must be one of 10k, 20k, 50k, 100k, 125k, 250k, 500k, 800k,
          * 1M.
-         * 
+         *
          * For instance, serial:///dev/ttyUSB0:115200:10k will open the device
          * on /dev/ttyUSB0 with a serial baud rate of 115200, using 10k CAN
          * rate.
@@ -68,7 +69,7 @@ namespace canbus
          * for packets in read() or for write access in write()
          */
         virtual uint32_t getReadTimeout() const;
-        
+
         /** Resets the chip */
         virtual bool resetBoard();
 
@@ -80,13 +81,29 @@ namespace canbus
 
         virtual Message read();
 
+        Message read(int timeout_ms);
+
         virtual void write(Message const& msg);
-        void asyncWrite(Message const& msg);
 
         int readWriteReply(int timeout = 0);
-        void readAllWriteReplies(int timeout = 0);
-        int getPendingWriteReplies() const;
 
+        /** Read the CAN timestamps from the board
+         *
+         * They are fairly unreliable in full-duplex situations, so they are
+         * disabled by default
+         *
+         * @see setUseBoardTimestamps
+         */
+        bool useBoardTimestamps() const;
+
+        /** Change whether the driver will attempt to use the board-reported timestamps
+         *
+         * They are fairly unreliable in full-duplex situations, so they are
+         * disabled by default
+         *
+         * @see useBoardTimestamps
+         */
+        void setUseBoardTimestamps(bool use);
 
         /** Removes all pending messages from the RX queue
          */
@@ -113,11 +130,11 @@ namespace canbus
 
         /** Returns the number of messages queued in the board's RX queue
          */
-        virtual int getPendingMessagesCount() { return 0; }
+        virtual int getPendingMessagesCount();
 
     private:
         char mCurrentCommand;
-        int mPendingWriteReplies;
+        bool mUseBoardTimestamps = false;
         void writeCommand(char const* cmd, int commandSize);
         void writeCommand(uint8_t const* cmd, int commandSize);
         int readReply(char cmd, uint8_t* buffer);
@@ -125,6 +142,9 @@ namespace canbus
         void processSimpleCommand(char const* cmd, int commandSize);
         void processSimpleCommand(uint8_t const* cmd, int commandSize);
         int extractPacket(uint8_t const* buffer, size_t buffer_size) const;
+
+        std::vector<canbus::Message> mQueue;
+        Message readFromIO(int timeout_ms);
     };
 }
 

@@ -21,8 +21,11 @@ BAUD_RATE_ARGUMENTS baud_rates[] = {
     { "", 0 }
 };
 
-DriverEasySYNC::DriverEasySYNC()
-    : iodrivers_base::Driver(MAX_PACKET_SIZE) {}
+DriverEasySYNC::DriverEasySYNC(int queue_size)
+    : iodrivers_base::Driver(MAX_PACKET_SIZE)
+{
+    mQueue.reserve(queue_size);
+}
 
 bool DriverEasySYNC::open(string const& path)
 {
@@ -48,6 +51,7 @@ bool DriverEasySYNC::open(string const& path)
     setWriteTimeout(100);
 
     openURI(uri);
+    mQueue.clear();
     if (path.substr(0, 6) == "serial")
     {
         struct serial_struct ss;
@@ -59,11 +63,15 @@ bool DriverEasySYNC::open(string const& path)
     // Force-close. Will fail if the device is already closed
     try { processSimpleCommand("C\r", 2); }
     catch(FailedCommand) { }
-    processSimpleCommand("Z1\r", 3);
+    processSimpleCommand("E\r", 2);
+    if (useBoardTimestamps())
+        processSimpleCommand("Z1\r", 3);
+    else
+        processSimpleCommand("Z0\r", 3);
     if (rate_cmd)
         processSimpleCommand(rate_cmd, 3);
     processSimpleCommand("O\r", 2);
-    mPendingWriteReplies = 0;
+    processSimpleCommand("E\r", 2);
     return true;
 }
 
@@ -90,12 +98,13 @@ uint32_t DriverEasySYNC::getReadTimeout() const
 bool DriverEasySYNC::resetBoard()
 {
     processSimpleCommand("R\r", 2);
+    mQueue.clear();
     return true;
 }
 
 bool DriverEasySYNC::reset()
 {
-    mPendingWriteReplies = 0;
+    mQueue.clear();
     return true;
 }
 
@@ -118,10 +127,53 @@ uint8_t const* parseBytes(uint8_t* output, uint8_t const* input, int byte_size)
     return input + byte_size * 2;
 }
 
+template<typename T>
+static void commandWithRetries(T lambda, int retries, int timeout) {
+    base::Time deadline = base::Time::now() + base::Time::fromMilliseconds(timeout);
+    while(true) {
+        try {
+            lambda((deadline - base::Time::now()).toMilliseconds());
+            break;
+        } catch (canbus::DriverEasySYNC::FailedCommand) {
+            if (--retries <= 0)
+                throw;
+        }
+    }
+}
+
+int DriverEasySYNC::getPendingMessagesCount()
+{
+    try {
+        while(mQueue.size() < mQueue.capacity())
+        {
+            auto msg = readFromIO(0);
+            mQueue.insert(mQueue.begin(), msg);
+        }
+    }
+    catch(iodrivers_base::TimeoutError) {}
+    return mQueue.size();
+}
+
 Message DriverEasySYNC::read()
 {
+    return read(getReadTimeout());
+}
+
+Message DriverEasySYNC::read(int timeout_ms)
+{
+    if (!mQueue.empty()) {
+        canbus::Message msg = mQueue.back();
+        mQueue.pop_back();
+        return msg;
+    }
+    return readFromIO(timeout_ms);
+}
+
+
+Message DriverEasySYNC::readFromIO(int timeout_ms)
+{
     uint8_t buffer[MAX_PACKET_SIZE];
-    int size = readPacket(buffer, MAX_PACKET_SIZE);
+    int size = readPacket(buffer, MAX_PACKET_SIZE, timeout_ms);
     canbus::Message message;
     message.time = base::Time::now();
 
@@ -135,7 +187,7 @@ Message DriverEasySYNC::read()
         buffer[0] = '0'; // round at the nibble ...
         cursor = parseBytes(raw_can_id + 2, buffer, 2);
     }
-    message.can_id = 
+    message.can_id =
         static_cast<int>(raw_can_id[0]) << 24 |
         static_cast<int>(raw_can_id[1]) << 16 |
         static_cast<int>(raw_can_id[2]) << 8 |
@@ -145,16 +197,21 @@ Message DriverEasySYNC::read()
     message.size = length;
 
     cursor = parseBytes(message.data, cursor + 1, length);
-    uint8_t raw_can_time[2] = { 0, 0 };
-    cursor = parseBytes(raw_can_time, cursor, 2);
+    if (cursor + 4 == buffer + size)
+    {
+        uint8_t raw_can_time[2] = { 0, 0 };
+        cursor = parseBytes(raw_can_time, cursor, 2);
 
-    if (cursor != buffer + size)
+        if (cursor != buffer + size)
+            throw std::runtime_error("size mismatch while parsing a received frame");
+
+        uint32_t can_time =
+            static_cast<int>(raw_can_time[0]) << 8 |
+            static_cast<int>(raw_can_time[1]) << 0;
+	    message.can_time = base::Time::fromMilliseconds(can_time);
+    }
+    else if (cursor != buffer + size)
         throw std::runtime_error("size mismatch while parsing a received frame");
-
-    uint32_t can_time = 
-        static_cast<int>(raw_can_time[0]) << 8 |
-        static_cast<int>(raw_can_time[1]) << 0;
-    message.can_time = base::Time::fromMilliseconds(can_time);
     return message;
 }
 
@@ -178,12 +235,6 @@ uint8_t* dumpBytes(uint8_t* output, uint8_t const* input, int byte_size)
 
 void DriverEasySYNC::write(Message const& msg)
 {
-    asyncWrite(msg);
-    readWriteReply(getReadTimeout());
-}
-
-void DriverEasySYNC::asyncWrite(Message const& msg)
-{
     uint8_t raw_can_id[4];
     raw_can_id[0] = (msg.can_id >> 24) & 0xFF;
     raw_can_id[1] = (msg.can_id >> 16) & 0xFF;
@@ -205,31 +256,13 @@ void DriverEasySYNC::asyncWrite(Message const& msg)
     *cursor = msg.size + '0';
     cursor = dumpBytes(cursor + 1, msg.data, msg.size);
     *cursor = '\r';
-    writePacket(buffer, cursor - buffer + 1);
-    mPendingWriteReplies++;
-}
 
-int DriverEasySYNC::readWriteReply(int timeout)
-{
-    if (mPendingWriteReplies == 0)
-        throw std::runtime_error("not expecting a write reply");
-
-    uint8_t buffer[MAX_PACKET_SIZE];
-    readReply('t', buffer, timeout);
-    return mPendingWriteReplies;
-}
-
-void DriverEasySYNC::readAllWriteReplies(int timeout)
-{
-    while (mPendingWriteReplies)
-    {
-        readWriteReply(timeout);
-    }
-}
-
-int DriverEasySYNC::getPendingWriteReplies() const
-{
-    return mPendingWriteReplies;
+    int bufferSize = cursor - buffer + 1;
+    uint8_t replyBuffer[MAX_PACKET_SIZE];
+    commandWithRetries([this, buffer, bufferSize, &replyBuffer](int timeout) {
+        writePacket(buffer, bufferSize);
+        readReply('t', replyBuffer, timeout);
+    }, 10, getReadTimeout());
 }
 
 int DriverEasySYNC::getFileDescriptor() const
@@ -251,8 +284,10 @@ void DriverEasySYNC::close()
 DriverEasySYNC::Status DriverEasySYNC::getStatus()
 {
     uint8_t buffer[MAX_PACKET_SIZE];
-    writeCommand("F\r", 2);
-    readReply('F', buffer);
+    commandWithRetries([this, &buffer](int timeout) {
+        writeCommand("F\r", 2);
+        readReply('F', buffer, timeout);
+    }, 10, getReadTimeout());
 
     uint8_t raw_status;
     parseBytes(&raw_status, buffer, 2);
@@ -288,9 +323,9 @@ DriverEasySYNC::Status DriverEasySYNC::getStatus()
 
 bool DriverEasySYNC::checkBusOk()
 {
-    Status status = getStatus();
-    return status.rx_state == OK &&
-        status.tx_state == OK;
+    // getStatus() expects the board's communication channel to be closed. This
+    // is very disruptive. I elected to avoid doing it here.
+    return true;
 }
 
 void DriverEasySYNC::clear()
@@ -301,10 +336,11 @@ void DriverEasySYNC::clear()
 
 void DriverEasySYNC::processSimpleCommand(char const* cmd, int commandSize)
 {
-    writeCommand(cmd, commandSize);
-
     uint8_t buffer[MAX_PACKET_SIZE];
-    readReply(cmd[0], buffer);
+    commandWithRetries([this, cmd, commandSize, &buffer](int timeout) {
+        writeCommand(cmd, commandSize);
+        readReply(cmd[0], buffer);
+    }, 10, getReadTimeout());
 }
 
 void DriverEasySYNC::processSimpleCommand(uint8_t const* cmd, int commandSize)
@@ -330,10 +366,14 @@ int DriverEasySYNC::readReply(char command, uint8_t* buffer)
 int DriverEasySYNC::readReply(char command, uint8_t* buffer, int timeout)
 {
     mCurrentCommand = command;
-    int size = readPacket(buffer, MAX_PACKET_SIZE, timeout);
-    if (buffer[0] == '\x7')
-        throw FailedCommand(string(&command, 1) + " command failed");
-    return size;
+    base::Time deadline = base::Time::now() + base::Time::fromMilliseconds(timeout);
+    while(true) {
+        int size = readPacket(buffer, MAX_PACKET_SIZE, (deadline - base::Time::now()).toMilliseconds());
+        if (buffer[0] == '\x7')
+            throw FailedCommand(string(&command, 1) + " command failed");
+        else if (buffer[0] != 't' && buffer[0] != 'T')
+            return size;
+    }
 }
 
 static bool isNibble(char c)
@@ -351,6 +391,16 @@ static int checkNibbleSequence(uint8_t const* buffer, int bufferSize, int offset
     return 0;
 }
 
+void DriverEasySYNC::setUseBoardTimestamps(bool use)
+{
+    mUseBoardTimestamps = use;
+}
+
+bool DriverEasySYNC::useBoardTimestamps() const
+{
+    return mUseBoardTimestamps;
+}
+
 int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) const
 {
     if (bufferSize == 0)
@@ -365,9 +415,11 @@ int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) cons
             return r;
         if (bufferSize < 5)
             return 0;
-    
+
         // remaining N bytes per packet and 4 for timestamp
-        int remainingLength = (buffer[4] - '0') * 2 + 4;
+        int remainingLength = (buffer[4] - '0') * 2;
+        if (useBoardTimestamps())
+            remainingLength += 4;
         size_t expectedLength = remainingLength + 5;
         r = checkNibbleSequence(buffer, bufferSize, 5, remainingLength);
         if (r)
@@ -449,6 +501,8 @@ int DriverEasySYNC::extractPacket(uint8_t const* buffer, size_t bufferSize) cons
                 return -2;
             else
                 return 2;
+        default:
+            return -1;
     }
     throw std::runtime_error("intenral error: unknown command in extractPacket");
 }
