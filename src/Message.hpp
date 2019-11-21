@@ -61,6 +61,16 @@ namespace canbus
 
         /** How many valid bytes there is in data */
         uint8_t  size;
+
+        static Message Zeroed() {
+            Message result;
+            result.can_id = 0;
+            for (int i = 0; i < 8; ++i) {
+                result.data[i] = 0;
+            }
+            result.size = 0;
+            return result;
+        }
     };
 
     struct Status
