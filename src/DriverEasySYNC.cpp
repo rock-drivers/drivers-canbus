@@ -62,7 +62,7 @@ bool DriverEasySYNC::open(string const& path)
 
     // Force-close. Will fail if the device is already closed
     try { processSimpleCommand("C\r", 2); }
-    catch(FailedCommand) { }
+    catch(FailedCommand&) { }
     processSimpleCommand("E\r", 2);
     if (useBoardTimestamps())
         processSimpleCommand("Z1\r", 3);
@@ -134,7 +134,7 @@ static void commandWithRetries(T lambda, int retries, int timeout) {
         try {
             lambda((deadline - base::Time::now()).toMilliseconds());
             break;
-        } catch (canbus::DriverEasySYNC::FailedCommand) {
+        } catch (canbus::DriverEasySYNC::FailedCommand&) {
             if (--retries <= 0)
                 throw;
         }
@@ -150,7 +150,7 @@ int DriverEasySYNC::getPendingMessagesCount()
             mQueue.insert(mQueue.begin(), msg);
         }
     }
-    catch(iodrivers_base::TimeoutError) {}
+    catch(iodrivers_base::TimeoutError&) {}
     return mQueue.size();
 }
 

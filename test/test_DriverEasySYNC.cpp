@@ -12,12 +12,19 @@ struct DriverTest : ::testing::Test, iodrivers_base::Fixture<DriverEasySYNC>
     {
     }
 
-    void open()
+    void open(bool use_board_timestamps = false)
     {
+        driver.setUseBoardTimestamps(use_board_timestamps);
         { IODRIVERS_BASE_MOCK();
-            EXPECT_REPLY("Z1\n", "\n");
-            EXPECT_REPLY("S2\n", "\n");
-            EXPECT_REPLY("O\n", "\n");
+            EXPECT_REPLY("C\r", "\r");
+            EXPECT_REPLY("E\r", "E\r");
+            if (use_board_timestamps)
+                EXPECT_REPLY("Z1\r", "\r");
+            else
+                EXPECT_REPLY("Z0\r", "\r");
+            EXPECT_REPLY("S2\r", "\r");
+            EXPECT_REPLY("O\r", "\r");
+            EXPECT_REPLY("E\r", "E\r");
             driver.open("test://:50k");
         }
     }
@@ -44,22 +51,28 @@ struct DriverTest : ::testing::Test, iodrivers_base::Fixture<DriverEasySYNC>
 
 TEST_F(DriverTest, open_sets_a_CAN_rate_provided_in_the_URI)
 { IODRIVERS_BASE_MOCK();
-    EXPECT_REPLY("Z1\n", "\n");
-    EXPECT_REPLY("S2\n", "\n");
-    EXPECT_REPLY("O\n", "\n");
+    EXPECT_REPLY("C\r", "\r");
+    EXPECT_REPLY("E\r", "E\r");
+    EXPECT_REPLY("Z0\r", "\r");
+    EXPECT_REPLY("S2\r", "\r");
+    EXPECT_REPLY("O\r", "\r");
+    EXPECT_REPLY("E\r", "E\r");
     driver.open("test://:50k");
 }
 
 TEST_F(DriverTest, open_does_not_set_an_explicit_rate_if_it_is_not_provided_in_the_URI)
 { IODRIVERS_BASE_MOCK();
-    EXPECT_REPLY("Z1\n", "\n");
-    EXPECT_REPLY("O\n", "\n");
+    EXPECT_REPLY("C\r", "\r");
+    EXPECT_REPLY("E\r", "E\r");
+    EXPECT_REPLY("Z0\r", "\r");
+    EXPECT_REPLY("O\r", "\r");
+    EXPECT_REPLY("E\r", "E\r");
     driver.open("test://");
 }
 
 TEST_F(DriverTest, open_raises_if_one_of_the_messages_gets_a_0x7_reply)
 { IODRIVERS_BASE_MOCK();
-    EXPECT_REPLY("Z1\n", "\x7");
+    EXPECT_REPLY("C\r", "\x7");
     ASSERT_ANY_THROW( driver.open("test://"); );
 }
 
@@ -82,7 +95,7 @@ TEST_F(DriverTest, write_encodes_a_standard_frame_and_returns_when_it_is_acknowl
 
     IODRIVERS_BASE_MOCK();
     canbus::Message msg = writeTestMessage();
-    EXPECT_REPLY("t34580123456789ABCDEF\n", "z\n");
+    EXPECT_REPLY("t34580123456789ABCDEF\r", "z\r");
     driver.write(msg);
 }
 
@@ -92,7 +105,7 @@ TEST_F(DriverTest, write_rejects_the_wrong_ack)
 
     IODRIVERS_BASE_MOCK();
     canbus::Message msg = writeTestMessage();
-    EXPECT_REPLY("t34580123456789ABCDEF\n", "\n");
+    EXPECT_REPLY("t34580123456789ABCDEF\r", "\r");
     ASSERT_ANY_THROW(driver.write(msg));
 }
 
@@ -102,16 +115,16 @@ TEST_F(DriverTest, write_throws_if_it_gets_an_error_reply)
 
     IODRIVERS_BASE_MOCK();
     canbus::Message msg = writeTestMessage();
-    EXPECT_REPLY("t34580123456789ABCDEF\n", "\x7");
+    EXPECT_REPLY("t34580123456789ABCDEF\r", "\x7");
     ASSERT_ANY_THROW(driver.write(msg));
 }
 
 TEST_F(DriverTest, it_parses_a_standard_frame_with_timestamp)
 {
-    open();
+    open(true);
 
     IODRIVERS_BASE_MOCK();
-    pushDataToDriver("t34580123456789ABCDEF2345\n");
+    pushDataToDriver("t34580123456789ABCDEF2345\r");
     Message msg = driver.read();
 
     ASSERT_EQ(msg.can_id, 0x345);
@@ -132,16 +145,16 @@ TEST_F(DriverTest, it_rejects_a_frame_with_an_invalid_character_in_the_can_ID)
     open();
 
     IODRIVERS_BASE_MOCK();
-    pushDataToDriver("t34@80123456789ABCDEF2345\n");
+    pushDataToDriver("t34@80123456789ABCDEF2345\r");
     ASSERT_ANY_THROW( driver.read() );
 }
 
 TEST_F(DriverTest, it_rejects_a_frame_with_an_invalid_character_in_the_can_length)
 {
-    open();
+    open(true);
 
     IODRIVERS_BASE_MOCK();
-    pushDataToDriver("t345901234567890ABCDEF2345\n");
+    pushDataToDriver("t345901234567890ABCDEF2345\r");
     ASSERT_ANY_THROW( driver.read() );
 }
 
@@ -150,16 +163,16 @@ TEST_F(DriverTest, it_rejects_a_frame_with_an_invalid_character_in_the_payload)
     open();
 
     IODRIVERS_BASE_MOCK();
-    pushDataToDriver("t34580123456@89ABCDEF2345\n");
+    pushDataToDriver("t34580123456@89ABCDEF2345\r");
     ASSERT_ANY_THROW( driver.read() );
 }
 
 TEST_F(DriverTest, it_rejects_a_frame_with_an_invalid_character_in_the_timestamp)
 {
-    open();
+    open(true);
 
     IODRIVERS_BASE_MOCK();
-    pushDataToDriver("t34580123456789ABCDEF2@45\n");
+    pushDataToDriver("t34580123456789ABCDEF2@45\r");
     ASSERT_ANY_THROW( driver.read() );
 }
 
@@ -168,7 +181,7 @@ TEST_F(DriverTest, it_parses_a_status_message)
     open();
 
     IODRIVERS_BASE_MOCK();
-    EXPECT_REPLY("F\n", "C6\n");
+    EXPECT_REPLY("F\r", "C6\r");
     DriverEasySYNC::Status status = driver.getStatus();
     ASSERT_EQ(status.tx_state, DriverEasySYNC::WARNING);
     ASSERT_EQ(status.rx_state, DriverEasySYNC::WARNING);
@@ -181,7 +194,7 @@ TEST_F(DriverTest, it_determines_the_state_using_the_worst_case)
     open();
 
     IODRIVERS_BASE_MOCK();
-    EXPECT_REPLY("F\n", "3E\n");
+    EXPECT_REPLY("F\r", "3E\r");
     DriverEasySYNC::Status status = driver.getStatus();
     ASSERT_EQ(status.tx_state, DriverEasySYNC::OFF);
     ASSERT_EQ(status.rx_state, DriverEasySYNC::PASSIVE);
@@ -192,7 +205,7 @@ TEST_F(DriverTest, it_handles_an_all_OK_message)
     open();
 
     IODRIVERS_BASE_MOCK();
-    EXPECT_REPLY("F\n", "00\n");
+    EXPECT_REPLY("F\r", "00\r");
     DriverEasySYNC::Status status = driver.getStatus();
     ASSERT_EQ(status.tx_state, DriverEasySYNC::OK);
     ASSERT_EQ(status.rx_state, DriverEasySYNC::OK);
